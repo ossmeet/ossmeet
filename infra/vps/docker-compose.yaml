@@ -1,0 +1,168 @@
+# LiveKit uses host networking (docs recommendation for optimal WebRTC performance).
+# All other services use bridge networking with Docker DNS.
+# Caddy reaches LiveKit via host.docker.internal; Redis exposes localhost:6379 for LiveKit.
+# Pinned image versions
+services:
+  haproxy:
+    image: haproxy:3.1-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks:
+      - internal
+
+  caddy-web:
+    image: caddy:2.11.2-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # allows caddy to reach livekit on host network
+    volumes:
+      - ./caddy-web/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_web_data:/data
+    networks:
+      - internal
+
+  caddy-turn:
+    build:
+      context: ./caddy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy.json"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # allows caddy to reach livekit on host network
+    volumes:
+      - ./caddy-turn.json:/etc/caddy.json:ro
+      - caddy_turn_data:/data
+    networks:
+      - internal
+
+  livekit:
+    image: livekit/livekit-server:v1.10.1
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    # host networking: LiveKit binds ports directly on the host — no docker-proxy overhead
+    # for WebRTC UDP. Ports 7881/tcp, 7882/udp, 3478/udp, and internal TURN/TLS
+    # 5350/tcp bind directly; HAProxy routes 443 by SNI to the appropriate internal proxy.
+    network_mode: host
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  redis:
+    image: redis:8-alpine
+    # Copy config and append password at runtime to avoid exposing it in process args
+    entrypoint: ["sh", "-c", "cp /etc/redis-base.conf /tmp/redis.conf && echo \"requirepass $REDIS_PASSWORD\" >> /tmp/redis.conf && exec redis-server /tmp/redis.conf"]
+    restart: unless-stopped
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:6379:6379"   # expose to localhost so livekit (host network) can connect
+    volumes:
+      - ./redis.conf:/etc/redis-base.conf:ro
+    healthcheck:
+      test: ["CMD", "sh", "-c", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - internal
+
+  egress:
+    image: livekit/egress:v1.12.0
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    environment:
+      - EGRESS_CONFIG_FILE=/etc/egress.yaml
+    volumes:
+      - ./egress.yaml:/etc/egress.yaml:ro
+    cap_add:
+      # SYS_ADMIN is required by LiveKit Egress for headless Chrome sandboxing.
+      # Mitigated by no-new-privileges and resource limits. Consider isolated VM for egress.
+      - SYS_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    # Compose honors these local limits; keep deploy.resources below in sync for
+    # teams that may later run the stack under Swarm-compatible tooling.
+    cpus: 4
+    mem_limit: 4g
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+    networks:
+      - internal
+
+  whiteboard:
+    build:
+      context: ../../packages/whiteboard
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:8787/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    environment:
+      - WHITEBOARD_INTERNAL_SECRET_FILE=/run/secrets/whiteboard_internal_secret
+      - WHITEBOARD_JWT_SECRET_FILE=/run/secrets/whiteboard_jwt_secret
+      - ALLOWED_ORIGINS=${WHITEBOARD_ALLOWED_ORIGINS}
+      - TRUST_PROXY_IPS=${WHITEBOARD_TRUST_PROXY_IPS:-172.16.0.0/12}
+      - PORT=8787
+      - DATA_DIR=/data/rooms
+      - APP_URL=${APP_URL}
+    volumes:
+      - whiteboard_data:/data/rooms
+      - ./secrets/whiteboard_internal_secret:/run/secrets/whiteboard_internal_secret:ro
+      - ./secrets/whiteboard_jwt_secret:/run/secrets/whiteboard_jwt_secret:ro
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  caddy_turn_data:
+  caddy_web_data:
+  whiteboard_data:

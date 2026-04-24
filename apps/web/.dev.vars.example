@@ -1,0 +1,32 @@
+# Copy to .dev.vars for local development
+APP_URL=http://localhost:3000
+ENVIRONMENT=development
+
+# Auth
+AUTH_SECRET=your-auth-secret-here
+
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Email (Resend)
+RESEND_API_KEY=
+
+# LiveKit
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
+
+# R2 (for presigned URLs)
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_ACCOUNT_ID=
+R2_BUCKET_NAME=ossmeet-files
+
+# AI (Gemini) — get key from Google AI Studio (aistudio.google.com)
+AI_API_KEY=
+AI_MODEL=gemini-3.1-flash-lite-preview
+AI_MODEL_FALLBACK=gemma-4-31b-it
+
+# Whiteboard server
+WHITEBOARD_INTERNAL_SECRET=
+WHITEBOARD_JWT_SECRET=

@@ -1,0 +1,24 @@
+redis:
+    address: redis:6379
+    username: ""
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    use_tls: false
+    sentinel_master_name: ""
+    sentinel_username: ""
+    sentinel_password: ""
+    sentinel_addresses: []
+    cluster_addresses: []
+    max_redirects: null
+health_port: 9090
+log_level: info
+api_key: "${LIVEKIT_API_KEY}"
+api_secret: "${LIVEKIT_API_SECRET}"
+ws_url: ${LIVEKIT_WS_URL}
+s3:
+    access_key: "${R2_ACCESS_KEY_ID}"
+    secret: "${R2_SECRET_ACCESS_KEY}"
+    region: auto
+    endpoint: "${R2_ENDPOINT}"
+    bucket: "${R2_BUCKET_NAME}"
+    force_path_style: true

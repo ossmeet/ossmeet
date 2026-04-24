@@ -1,0 +1,52 @@
+log_level: info
+port: 7880
+# Prometheus metrics — scrape at http://localhost:6789/metrics
+# Not exposed externally (UFW restricts to localhost + Docker subnets).
+prometheus:
+    port: 6789
+bind_addresses:
+    - ""
+rtc:
+    tcp_port: 7881
+    # UDP mux: all WebRTC UDP on a single port (simpler firewall; avoids port range)
+    udp_port: 7882
+    use_external_ip: true
+    enable_loopback_candidate: false
+    ips:
+        excludes:
+            # Do not advertise Docker bridge or IPv6 link-local addresses as ICE candidates.
+            - 172.16.0.0/12
+            - fe80::/10
+redis:
+    address: 127.0.0.1:6379
+    username: ""
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    use_tls: false
+    sentinel_master_name: ""
+    sentinel_username: ""
+    sentinel_password: ""
+    sentinel_addresses: []
+    cluster_addresses: []
+    max_redirects: null
+turn:
+    enabled: true
+    domain: livekit-turn.ossmeet.com
+    udp_port: 3478
+    # Caddy terminates TURN/TLS on 443 for livekit-turn.ossmeet.com and proxies
+    # plain TURN to this host-network port.
+    tls_port: 5350
+    external_tls: true
+room:
+    # Keep empty rooms alive so a reconnecting participant can rejoin after a network drop.
+    # LiveKit emits room_finished after departure_timeout when the last participant
+    # does not return. OSSMeet finalizes on that event so full reconnects are not
+    # raced by app-side cleanup.
+    empty_timeout: 60
+    departure_timeout: 120
+keys:
+    "${LIVEKIT_API_KEY}": "${LIVEKIT_API_SECRET}"
+webhook:
+    api_key: "${LIVEKIT_API_KEY}"
+    urls:
+        - "https://ossmeet.com/api/livekit/webhook"

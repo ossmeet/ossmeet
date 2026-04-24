@@ -1,0 +1,3 @@
+Contact: mailto:security@ossmeet.com
+Preferred-Languages: en
+Policy: https://ossmeet.com/security

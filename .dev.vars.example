@@ -1,0 +1,56 @@
+# OSSMeet Development Environment Variables
+# Copy this file to .dev.vars and fill in the values
+
+# App
+APP_NAME=OSSMeet
+APP_URL=http://localhost:3000
+ENVIRONMENT=development
+
+# Auth
+AUTH_SECRET=your-auth-secret-here
+
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Email (Resend)
+RESEND_API_KEY=
+
+# LiveKit (video/audio)
+LIVEKIT_URL=wss://livekit.your-domain.example
+VITE_LIVEKIT_URL=wss://livekit.your-domain.example
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
+# Comma-separated TURN URLs are supported (recommended: UDP + TLS fallback).
+# When TURN/TLS is exposed on a separate TCP listener, use that external port.
+LIVEKIT_TURN_URL=turn:your-turn-server:3478?transport=udp,turns:your-turn-server:5349?transport=tcp
+LIVEKIT_TURN_SECRET=
+
+# Cloudflare R2 (file storage)
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_ACCOUNT_ID=
+R2_BUCKET_NAME=
+
+# Whiteboard (optional — only needed if packages/whiteboard is installed)
+# WHITEBOARD_URL=http://localhost:4000
+# WHITEBOARD_INTERNAL_SECRET=
+# WHITEBOARD_JWT_SECRET=
+
+# UptimeRobot monitoring (optional — uptime bars on /status hidden if unset)
+# API key: UptimeRobot dashboard → My Settings → API Settings → Main API Key
+# Monitor IDs: numeric ID visible in the dashboard URL when viewing a monitor
+UPTIMEROBOT_API_KEY=
+UPTIMEROBOT_MONITOR_LIVEKIT_ID=
+
+# Paddle Billing
+# API key: Paddle dashboard → Developer Tools → Authentication → API keys
+PADDLE_API_KEY=
+# Webhook secret: Paddle dashboard → Developer Tools → Notifications → webhook endpoint
+PADDLE_WEBHOOK_SECRET=
+# Client-side token: Paddle dashboard → Developer Tools → Authentication → Client-side tokens
+VITE_PADDLE_CLIENT_TOKEN=
+PADDLE_ENVIRONMENT=sandbox
+# Price IDs: Paddle dashboard → Catalog → Products → (your product) → Prices
+PADDLE_PRICE_ID_PRO=
+PADDLE_PRICE_ID_ORG=

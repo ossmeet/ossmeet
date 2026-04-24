@@ -1,0 +1,34 @@
+{
+	storage file_system {
+		root /data
+	}
+
+	log default {
+		output stdout
+		format json
+	}
+
+	servers :443 {
+		listener_wrappers {
+			proxy_protocol {
+				timeout 2s
+				allow 172.16.0.0/12
+				fallback_policy require
+			}
+			tls
+		}
+	}
+}
+
+livekit.ossmeet.com {
+	reverse_proxy host.docker.internal:7880 {
+		header_down Alt-Svc "clear"
+		flush_interval -1
+	}
+}
+
+whiteboard.ossmeet.com {
+	reverse_proxy whiteboard:8787 {
+		flush_interval -1
+	}
+}

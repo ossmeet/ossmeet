@@ -1,0 +1,821 @@
+@import "tailwindcss" source("./");
+@source "../../../packages/whiteboard/src";
+
+/* Inter — Body text */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/inter-400.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+02B0-02FF, U+2000-20CF, U+20AC, U+2122, U+2190-21FF, U+2212, U+25A0-25FF, U+FB01-FB02;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/inter-500.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+02B0-02FF, U+2000-20CF, U+20AC, U+2122, U+2190-21FF, U+2212, U+25A0-25FF, U+FB01-FB02;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/inter-600.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+02B0-02FF, U+2000-20CF, U+20AC, U+2122, U+2190-21FF, U+2212, U+25A0-25FF, U+FB01-FB02;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/inter-700.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+02B0-02FF, U+2000-20CF, U+20AC, U+2122, U+2190-21FF, U+2212, U+25A0-25FF, U+FB01-FB02;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/inter-800.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+02B0-02FF, U+2000-20CF, U+20AC, U+2122, U+2190-21FF, U+2212, U+25A0-25FF, U+FB01-FB02;
+}
+
+/* Plus Jakarta Sans — Display/headings (geometric humanist, warm personality) */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/plus-jakarta-sans-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/plus-jakarta-sans-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/plus-jakarta-sans-800.woff2") format("woff2");
+}
+
+/* JetBrains Mono — code editor font, only used inside the meeting room.
+   font-display: optional prevents the browser from blocking text rendering to
+   wait for a font that the landing page never needs. On pages that do use it
+   (the code panel in the whiteboard), the font is fetched and cached normally. */
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url("/fonts/jetbrains-mono-400.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+2000-206F, U+20AC, U+2190-21FF, U+2500-257F, U+25A0-25FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: optional;
+  src: url("/fonts/jetbrains-mono-500.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+2000-206F, U+20AC, U+2190-21FF, U+2500-257F, U+25A0-25FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url("/fonts/jetbrains-mono-600.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+2000-206F, U+20AC, U+2190-21FF, U+2500-257F, U+25A0-25FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url("/fonts/jetbrains-mono-700.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-024F, U+2000-206F, U+20AC, U+2190-21FF, U+2500-257F, U+25A0-25FF;
+}
+
+@theme {
+  /* ============================================================
+     OSSMeet Design System — "Knowledge Canvas"
+     Warm neutrals, Deep Teal focus, Amber energy
+     ============================================================ */
+
+  /* Structural Neutrals: Warm stone (human, not corporate) */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+
+  /* Primary Accent: Deep Teal (focus, growth, depth of knowledge) */
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-200: #99f6e4;
+  --color-teal-300: #5eead4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+  --color-teal-900: #134e4a;
+  --color-teal-950: #042f2e;
+
+  /* Secondary Accent: Warm Amber (energy, creativity, lightbulb moments) */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+
+  /* Tertiary: Soft Violet (AI features, recognition) */
+  --color-violet-50: #f5f3ff;
+  --color-violet-100: #ede9fe;
+  --color-violet-200: #ddd6fe;
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+
+  /* Warm Neutrals: Creamy warm grays with visible warmth */
+  --color-warm-50: #f7f3ee;
+  --color-warm-100: #ebe4db;
+  --color-warm-200: #ddd2c4;
+  --color-warm-300: #c8b8a5;
+  --color-warm-400: #b09a82;
+  --color-warm-500: #9a826a;
+  --color-warm-600: #7d6954;
+  --color-warm-700: #645342;
+  --color-warm-800: #4a3e32;
+  --color-warm-900: #332b23;
+  --color-warm-950: #1e1914;
+
+  /* Semantic Status Colors */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+
+  /* ============================================================
+     Semantic Token Mappings
+     ============================================================ */
+
+  /* Primary: Warm stone neutrals (structural) */
+  --color-primary-50: var(--color-stone-50);
+  --color-primary-100: var(--color-stone-100);
+  --color-primary-200: var(--color-stone-200);
+  --color-primary-300: var(--color-stone-300);
+  --color-primary-400: var(--color-stone-400);
+  --color-primary-500: var(--color-stone-500);
+  --color-primary-600: var(--color-stone-600);
+  --color-primary-700: var(--color-stone-700);
+  --color-primary-800: var(--color-stone-800);
+  --color-primary-900: var(--color-stone-900);
+  --color-primary-950: var(--color-stone-950);
+
+  /* Accent: Deep teal (interactive, focus) */
+  --color-accent-50: var(--color-teal-50);
+  --color-accent-100: var(--color-teal-100);
+  --color-accent-200: var(--color-teal-200);
+  --color-accent-300: var(--color-teal-300);
+  --color-accent-400: var(--color-teal-400);
+  --color-accent-500: var(--color-teal-500);
+  --color-accent-600: var(--color-teal-600);
+  --color-accent-700: var(--color-teal-700);
+  --color-accent-800: var(--color-teal-800);
+  --color-accent-900: var(--color-teal-900);
+  --color-accent-950: var(--color-teal-950);
+
+  /* Neutral: Warm stone */
+  --color-neutral-50: var(--color-stone-50);
+  --color-neutral-100: var(--color-stone-100);
+  --color-neutral-200: var(--color-stone-200);
+  --color-neutral-300: var(--color-stone-300);
+  --color-neutral-400: var(--color-stone-400);
+  --color-neutral-500: var(--color-stone-500);
+  --color-neutral-600: var(--color-stone-600);
+  --color-neutral-700: var(--color-stone-700);
+  --color-neutral-800: var(--color-stone-800);
+  --color-neutral-900: var(--color-stone-900);
+  --color-neutral-950: var(--color-stone-950);
+
+  /* ============================================================
+     Typography
+     ============================================================ */
+
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Plus Jakarta Sans", "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+
+  /* Fine-grained type scale */
+  --font-size-2xs: 0.625rem;
+  --font-size-3xs: 0.5625rem;
+  --font-size-4xs: 0.5rem;
+  --font-size-2xs--line-height: 1rem;
+  --font-size-3xs--line-height: 0.875rem;
+  --font-size-4xs--line-height: 0.75rem;
+
+  /* Fluid type scale */
+  --text-display: clamp(3rem, 5vw + 1rem, 5.5rem);
+  --text-h1: clamp(2.25rem, 3.5vw + 0.5rem, 3.75rem);
+  --text-h2: clamp(1.5rem, 2vw + 0.5rem, 2.25rem);
+  --text-h3: clamp(1.125rem, 1.2vw + 0.1rem, 1.5rem);
+
+  /* ============================================================
+     Shadows — Warm, Subtle, Layered
+     ============================================================ */
+
+  --shadow-soft: 0 1px 3px rgba(28, 25, 23, 0.04), 0 1px 2px rgba(28, 25, 23, 0.03);
+  --shadow-card: 0 4px 16px -2px rgba(28, 25, 23, 0.06), 0 2px 6px -1px rgba(28, 25, 23, 0.04);
+  --shadow-elevated: 0 20px 40px -8px rgba(28, 25, 23, 0.1), 0 8px 16px -4px rgba(28, 25, 23, 0.06);
+  --shadow-glow-primary: 0 16px 40px -8px rgba(13, 148, 136, 0.3);
+  --shadow-glow-accent: 0 16px 40px -8px rgba(217, 119, 6, 0.3);
+
+  /* ============================================================
+     Easing Curves
+     ============================================================ */
+
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-gentle: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-stiff: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ============================================================
+     Animations
+     ============================================================ */
+
+  --animate-fade-in: fade-in 0.3s var(--spring-stiff) both;
+  --animate-fade-in-up: fade-in-up 0.4s var(--spring-gentle) both;
+  --animate-slide-in-right: slide-in-right 0.3s var(--spring-stiff) both;
+  --animate-scale-in: scale-in 0.3s var(--spring-stiff) both;
+  --animate-float: float 8s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
+  --animate-blob: blob 15s infinite alternate;
+  --animate-spin-slow: spin 25s linear infinite;
+  --animate-quantum-in: quantum-in 0.6s var(--spring-bounce) both;
+  --animate-pill-expand: pill-expand 0.4s var(--spring-bounce) both;
+  --animate-gradient-shift: gradient-shift 20s ease infinite;
+  --animate-slide-in-left: slide-in-left 0.6s var(--spring-bounce) both;
+  --animate-float-slow: float-slow 8s ease-in-out infinite;
+  --animate-panel-slide-in: panel-slide-in 0.2s ease-out both;
+  --animate-bounce-dot: bounce-dot 1s ease-in-out infinite;
+  --animate-header-pill-in: header-pill-in 0.3s ease-out both;
+  --animate-shrink: shrink 5s linear forwards;
+
+  /* ============================================================
+     Semantic surface colours
+     ============================================================ */
+
+  /* Warm canvas — the off-white background used in pre-join and loading screens */
+  --color-canvas: #f2f0ec;
+
+  /* ============================================================
+     Z-index scale — use these instead of arbitrary z-[N] values
+     ============================================================ */
+
+  /* ============================================================
+     Aura / Apple Aesthetic Design Tokens
+     ============================================================ */
+
+  --shadow-bento: 0 8px 32px -4px rgba(0, 0, 0, 0.03), 0 2px 10px -1px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --shadow-bento-hover: 0 16px 40px -8px rgba(0, 0, 0, 0.06), 0 4px 12px -2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-aura-glow: 0 0 40px -10px rgba(20, 184, 166, 0.15);
+  
+  --color-surface-glass: rgba(255, 255, 255, 0.75);
+  --color-surface-glass-hover: rgba(255, 255, 255, 0.9);
+
+  --z-toast: 100;
+  --z-popover: 1200;
+  --z-tooltip: 280;
+  --z-modal: 300;
+  --z-pill: 9999;
+}
+
+@keyframes quantum-in {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); filter: blur(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
+}
+
+@keyframes pill-expand {
+  from { width: 40px; border-radius: 9999px; }
+  to { width: 100%; border-radius: 24px; }
+}
+
+/* ============================================================
+   Keyframes
+   ============================================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-24px) rotate(3deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(40px, -60px) scale(1.1); }
+  66% { transform: translate(-30px, 30px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+@keyframes panel-slide-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes header-pill-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes bounce-dot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ============================================================
+   MeetUIMockup Whiteboard Animations (16s loop)
+   ============================================================ */
+
+@keyframes drawCircle {
+  0%, 3%    { stroke-dashoffset: 100; opacity: 0; }
+  5%        { stroke-dashoffset: 100; opacity: 1; }
+  25%       { stroke-dashoffset: 0;   opacity: 1; }
+  84%       { opacity: 1; }
+  94%, 100% { opacity: 0; }
+}
+
+@keyframes drawHex {
+  0%, 22%   { stroke-dashoffset: 100; opacity: 0; }
+  24%       { stroke-dashoffset: 100; opacity: 1; }
+  46%       { stroke-dashoffset: 0;   opacity: 1; }
+  84%       { opacity: 1; }
+  94%, 100% { opacity: 0; }
+}
+
+@keyframes drawTriA {
+  0%, 38%   { stroke-dashoffset: 100; opacity: 0; }
+  40%       { stroke-dashoffset: 100; opacity: 1; }
+  58%       { stroke-dashoffset: 0;   opacity: 1; }
+  84%       { opacity: 1; }
+  94%, 100% { opacity: 0; }
+}
+
+@keyframes drawTriB {
+  0%, 52%   { stroke-dashoffset: 100; opacity: 0; }
+  54%       { stroke-dashoffset: 100; opacity: 1; }
+  70%       { stroke-dashoffset: 0;   opacity: 1; }
+  84%       { opacity: 1; }
+  94%, 100% { opacity: 0; }
+}
+
+@keyframes showDots {
+  0%, 68%    { opacity: 0; }
+  74%, 84%   { opacity: 1; }
+  94%, 100%  { opacity: 0; }
+}
+
+@keyframes showAnnot {
+  0%, 70%    { opacity: 0; }
+  76%, 84%   { opacity: 1; }
+  94%, 100%  { opacity: 0; }
+}
+
+@keyframes showTeachNote {
+  0%, 46%    { opacity: 0; transform: translateY(4px); }
+  52%, 84%   { opacity: 1; transform: translateY(0); }
+  94%, 100%  { opacity: 0; }
+}
+
+@keyframes showStuNote {
+  0%, 68%    { opacity: 0; transform: translateY(4px); }
+  74%, 84%   { opacity: 1; transform: translateY(0); }
+  94%, 100%  { opacity: 0; }
+}
+
+@keyframes teachCur {
+  0%, 3%     { transform: translate(368px, 145px); opacity: 0; }
+  5%         { transform: translate(368px, 145px); opacity: 1; }
+  12%        { transform: translate(278px, 58px); }
+  20%        { transform: translate(192px, 145px); }
+  25%        { transform: translate(368px, 145px); }
+  30%        { transform: translate(320px, 218px); }
+  38%        { transform: translate(234px, 218px); }
+  46%        { transform: translate(368px, 145px); opacity: 1; }
+  52%, 84%   { transform: translate(100px, 250px); opacity: 0.8; }
+  94%, 100%  { opacity: 0; }
+}
+
+@keyframes stuCur {
+  0%, 36%    { transform: translate(150px, 100px); opacity: 0; }
+  40%        { transform: translate(368px, 145px); opacity: 1; }
+  48%        { transform: translate(234px, 218px); }
+  56%        { transform: translate(234px, 70px); }
+  60%        { transform: translate(320px, 218px); }
+  68%        { transform: translate(192px, 145px); }
+  72%        { transform: translate(320px, 70px); opacity: 1; }
+  78%, 84%   { transform: translate(400px, 250px); opacity: 0.8; }
+  94%, 100%  { opacity: 0; }
+}
+
+@keyframes tileFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-3px); }
+}
+
+@keyframes sb1 {
+  0%, 100% { height: 2px; }
+  50%       { height: 9px; }
+}
+
+@keyframes sb2 {
+  0%, 100% { height: 5px; }
+  50%       { height: 8px; }
+}
+
+@keyframes sb3 {
+  0%, 100% { height: 8px; }
+  50%       { height: 2px; }
+}
+
+/* ============================================================
+   Reduced Motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Base Layer
+   ============================================================ */
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    overflow-x: hidden;
+    /* Required for Base UI portal layering: backdrops use fixed positioning
+       relative to the containing block, which requires position: relative. */
+    position: relative;
+  }
+
+  /* Prevent scroll on meet routes (full-screen video room) */
+  body.meet-route {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  button, [role="button"], a[href], input, select, textarea, summary {
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================================
+   Safe Area Insets (iOS notch / Android gesture bar)
+   ============================================================ */
+
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-top    { padding-top:    env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-left   { padding-left:   env(safe-area-inset-left); }
+  .safe-right  { padding-right:  env(safe-area-inset-right); }
+  .safe-x      { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .safe-y      { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  .safe-all    { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  
+  /* Margin variants for absolute positioning */
+  .mt-safe-top       { margin-top: env(safe-area-inset-top); }
+  .mb-safe-bottom    { margin-bottom: env(safe-area-inset-bottom); }
+  .ml-safe-left      { margin-left: env(safe-area-inset-left); }
+  .mr-safe-right     { margin-right: env(safe-area-inset-right); }
+  
+  /* Bottom padding specifically for whiteboard toolbar */
+  .pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* ============================================================
+   Dynamic Viewport Height Support (iOS Safari fix)
+   ============================================================ */
+
+/* Fallback for browsers that don't support dvh */
+@supports not (height: 100dvh) {
+  .h-dvh {
+    height: 100vh;
+  }
+}
+
+/* Browsers that support dvh get the dynamic viewport */
+@supports (height: 100dvh) {
+  .h-dvh {
+    height: 100dvh;
+  }
+}
+
+/* Reduce blur on coarse-pointer / mobile for GPU performance */
+@media (pointer: coarse), (max-width: 768px) {
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: blur(6px) !important;
+    backdrop-filter: blur(6px) !important;
+  }
+}
+
+/* ============================================================
+   Dot Grid Background (Knowledge Canvas pattern)
+   ============================================================ */
+
+.bg-dot-grid {
+  background-image: radial-gradient(circle, rgb(120 113 108 / 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-dot-grid-dense {
+  background-image: radial-gradient(circle, rgb(120 113 108 / 0.12) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* ============================================================
+   Liquid Design System — Meeting Pages
+   Warm, organic backgrounds with flowing gradient blobs
+   ============================================================ */
+
+@keyframes liquid-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -40px) scale(1.08); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(15px, 35px) scale(1.05); }
+}
+
+@keyframes liquid-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-35px, 25px) scale(1.06); }
+  50% { transform: translate(25px, -30px) scale(0.92); }
+  75% { transform: translate(-15px, -20px) scale(1.1); }
+}
+
+@keyframes liquid-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, 30px) scale(1.12); }
+  66% { transform: translate(-25px, -15px) scale(0.88); }
+}
+
+@keyframes liquid-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes liquid-border-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes meeting-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Base meeting background — soft warm gray for eye comfort */
+.liquid-meeting-bg {
+  background: #f2f0ec;
+}
+
+/* Subtle warm gradient variant for special screens */
+.liquid-meeting-bg-subtle {
+  background: #f2f0ec;
+}
+
+/* Subtle ambient blobs — minimal and clean */
+.liquid-blob-teal {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(20 184 166 / 0.08), transparent 70%);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.liquid-blob-amber {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(251 191 36 / 0.06), transparent 70%);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.liquid-blob-violet {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(167 139 250 / 0.05), transparent 70%);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.liquid-blob-cream {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.5), transparent 60%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+/* Luminous glass panels for light theme — warm, airy surfaces */
+.liquid-glass {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.9), rgb(250 249 247 / 0.8));
+  border: 1px solid rgb(231 229 228 / 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px -4px rgb(28 25 23 / 0.08), 0 1px 2px rgb(28 25 23 / 0.04);
+}
+
+/* Dark variant for overlaying on light backgrounds (loading states, etc) */
+.liquid-glass-dark {
+  background: linear-gradient(135deg, rgb(28 25 23 / 0.85), rgb(41 37 36 / 0.9));
+  border: 1px solid rgb(68 64 60 / 0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 24px 48px -8px rgb(0 0 0 / 0.25);
+}
+
+/* Clean glass panel — minimal and elegant */
+.liquid-glass-glow {
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(231, 229, 228, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 40px -12px rgba(28, 25, 23, 0.08), 0 8px 16px -6px rgba(28, 25, 23, 0.04);
+}
+
+/* Soft glow variant for loading states */
+.liquid-glass-soft {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.85), rgb(245 243 240 / 0.75));
+  border: 1px solid rgb(231 229 228 / 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 16px 40px -12px rgb(28 25 23 / 0.12);
+}
+
+/* Teal spinner ring — luminous for light theme */
+.liquid-spinner {
+  width: 36px;
+  height: 36px;
+  border: 2.5px solid rgb(20 184 166 / 0.25);
+  border-top-color: rgb(13 148 136 / 0.9);
+  border-radius: 50%;
+  animation: meeting-spin 0.8s linear infinite;
+}
+
+/* Light spinner variant */
+.liquid-spinner-light {
+  width: 36px;
+  height: 36px;
+  border: 2.5px solid rgb(20 184 166 / 0.2);
+  border-top-color: rgb(15 118 110 / 0.8);
+  border-radius: 50%;
+  animation: meeting-spin 0.8s linear infinite;
+}
+
+/* Reduce motion for liquid animations */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-blob-teal,
+  .liquid-blob-amber,
+  .liquid-blob-violet {
+    animation: none;
+  }
+  .liquid-glass-glow::before {
+    animation: none;
+  }
+  .liquid-spinner {
+    animation: meeting-spin 0.8s linear infinite;
+  }
+}
+
+/* ============================================================
+   Aura Design System Components
+   ============================================================ */
+
+.bento-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  border-radius: 28px;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: var(--shadow-bento);
+  transition: all 0.4s var(--spring-bounce);
+  overflow: hidden;
+}
+
+.bento-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-bento-hover);
+  transform: translateY(-2px);
+}
+
+.aura-glass {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}

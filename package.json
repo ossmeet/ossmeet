@@ -1,0 +1,36 @@
+{
+  "name": "ossmeet",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/run-root-dev.mjs",
+    "build": "pnpm --filter @ossmeet/web build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "db:generate": "pnpm --filter @ossmeet/db db:generate",
+    "db:push:dev": "pnpm --filter @ossmeet/db db:push:dev",
+    "db:migrate:local": "pnpm --filter @ossmeet/web db:migrate:local",
+    "db:migrate:remote": "pnpm --filter @ossmeet/web db:migrate:remote",
+    "deploy": "node scripts/run-root-deploy.mjs",
+    "deploy:vps": "bash infra/vps/sync.sh",
+    "deploy:all": "pnpm run deploy"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5",
+    "wrangler": "^4.84.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "h3": "2.0.1-rc.18",
+      "h3-v2": "npm:h3@2.0.1-rc.18",
+      "lodash-es": "4.18.1"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "sharp"
+    ]
+  }
+}

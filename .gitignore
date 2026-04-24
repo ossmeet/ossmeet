@@ -1,0 +1,71 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+
+# Build outputs
+dist
+.turbo
+*.tsbuildinfo
+apps/web/.tanstack/
+
+# Generated assets (created by build scripts, not committed)
+apps/web/public/wb-assets
+apps/web/public/wasm
+apps/web/src/lib/wb-asset-urls.ts
+
+# Cloudflare
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Caddy
+caddy_data
+infra/vps/secrets/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Private packages & assets — not part of the open source release
+packages/whiteboard/
+.private/
+scripts/sync-wb-assets.mjs
+apps/web/public/_private
+
+# Vendored reference docs (personal dev aid, not shipped)
+docs/
+
+patches/
+
+# Secrets — never commit
+*.pem
+*.key
+credentials.json
+
+# Vendored sources (private copies for reference)
+*-main/
+*-master/
+
+# Root-only Markdown notes/instructions should not go to Git/GitHub
+/*.md
+
+# Repository metadata should stay local for now
+.github/
