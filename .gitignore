@@ -66,6 +66,7 @@ credentials.json
 
 # Root-only Markdown notes/instructions should not go to Git/GitHub
 /*.md
+!/README.md
 
 # Repository metadata should stay local for now
 .github/
