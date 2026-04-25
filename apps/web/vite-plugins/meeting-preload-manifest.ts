@@ -1,5 +1,21 @@
 import type { Plugin } from "vite";
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
+
+const MEETING_ROUTE_SUFFIX = "/src/routes/$code.lazy.tsx";
+
+interface OutputChunkLike {
+  fileName: string;
+  name?: string;
+  imports?: string[];
+  dynamicImports?: string[];
+  facadeModuleId?: string | null;
+  moduleIds?: string[];
+}
+
+function isMeetingRouteChunk(chunk: OutputChunkLike): boolean {
+  if (chunk.facadeModuleId?.endsWith(MEETING_ROUTE_SUFFIX)) return true;
+  if (chunk.moduleIds?.some((id) => id.endsWith(MEETING_ROUTE_SUFFIX))) return true;
+  return chunk.name?.startsWith("_code.lazy") ?? false;
+}
 
 /**
  * Generates a JSON manifest mapping the meeting lazy route to its chunk file.
@@ -15,32 +31,46 @@ export function meetingPreloadManifest(): Plugin {
   return {
     name: "meeting-preload-manifest",
     apply: "build",
-    writeBundle(options, bundle) {
-      // Only run in the client build (not SSR)
-      const outDir = options.dir;
-      // SSR builds output to dist/server; client builds output to dist/client
-      if (!outDir || outDir.includes("/server")) return;
+    generateBundle(_options, bundle) {
+      if (this.environment?.config?.consumer === "server") return;
 
-      const chunks: string[] = [];
+      const chunkEntries = Object.values(bundle)
+        .filter((output): output is typeof output & OutputChunkLike => output.type === "chunk");
 
-      for (const [fileName, output] of Object.entries(bundle)) {
-        if (fileName.startsWith("assets/") && fileName.endsWith(".js")) {
-          const chunk = output as { name?: string; dynamicImports?: string[] };
-          // The meeting lazy chunk is named "_code.lazy" by the manualChunks config
-          if (chunk.name === "_code.lazy") {
-            chunks.push("/" + fileName);
+      const chunkMap = new Map(chunkEntries.map((chunk) => [chunk.fileName, chunk]));
+      const queue = chunkEntries
+        .filter((chunk) => chunk.fileName.startsWith("assets/") && chunk.fileName.endsWith(".js"))
+        .filter(isMeetingRouteChunk);
+
+      const chunkFiles = new Set<string>();
+
+      while (queue.length > 0) {
+        const chunk = queue.shift();
+        if (!chunk || chunkFiles.has(chunk.fileName)) continue;
+
+        if (chunk.fileName.startsWith("assets/") && chunk.fileName.endsWith(".js")) {
+          chunkFiles.add(chunk.fileName);
+        }
+
+        // Only follow static imports — dynamic imports load on-demand and
+        // shouldn't be eagerly preloaded (avoids pulling in vendor chunks
+        // that are already loaded from the initial page render).
+        for (const dependency of chunk.imports ?? []) {
+          const nextChunk = chunkMap.get(dependency);
+          if (nextChunk && !chunkFiles.has(nextChunk.fileName)) {
+            queue.push(nextChunk);
           }
         }
       }
 
-      if (chunks.length === 0) return;
+      if (chunkFiles.size === 0) return;
 
-      const manifest = { meetingChunks: chunks };
-      if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
-      writeFileSync(
-        outDir + "/meeting-chunks.json",
-        JSON.stringify(manifest),
-      );
+      const manifest = { meetingChunks: [...chunkFiles].sort().map((fileName) => "/" + fileName) };
+      this.emitFile({
+        type: "asset",
+        fileName: "meeting-chunks.json",
+        source: JSON.stringify(manifest),
+      });
     },
   };
 }

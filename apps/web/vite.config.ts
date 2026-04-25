@@ -62,7 +62,7 @@ function clientOnlyWhiteboardPlugin(whiteboardPlugin: WhiteboardPlugin): Plugin 
   const buildEnd = plugin.buildEnd;
   if (buildEnd) {
     plugin.buildEnd = function (this: any) {
-      if (this?.environment?.name === "ssr") return;
+      if (this?.environment?.config?.consumer === "server") return;
       return buildEnd.call(this);
     };
   }
@@ -121,6 +121,11 @@ export default defineConfig(async () => {
     tailwindcss(),
     clientOnlyWhiteboardPlugin(whiteboardPlugin),
     tanstackStart({
+      importProtection: {
+        client: {
+          specifiers: ["livekit-server-sdk"],
+        },
+      },
       spa: {
         enabled: true,
         maskPath: "/__spa",
@@ -158,7 +163,7 @@ export default defineConfig(async () => {
   build: {
     emptyOutDir: true,
     target: ["chrome120", "safari16", "ios16", "firefox115"],
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         manualChunks(id: string) {
           if (!id.includes("node_modules")) return;

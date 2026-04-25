@@ -91,7 +91,6 @@ function SettingsPage() {
             <PlanSection
               plan={user.plan as import("@ossmeet/shared").PlanType}
               subscriptionStatus={user.subscriptionStatus}
-              userId={user.id}
             />
           )}
           {activeSection === "security" && <SecuritySection />}

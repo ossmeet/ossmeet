@@ -1,4 +1,5 @@
-export { terminateMeetingRoom, leaveMeeting, endMeeting, livekitHttpUrl } from "./leave-end";
+export { leaveMeeting, endMeeting, livekitHttpUrl } from "./leave-end";
+export { terminateMeetingRoom } from "./leave-end.server";
 export { refreshMeetingToken } from "./tokens";
 export { joinMeeting } from "./join";
 export { createMeeting, getMeeting, getMeetingParticipants, getMyRecentMeetings } from "./crud";

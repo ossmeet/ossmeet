@@ -43,7 +43,7 @@ function SummaryCell({ meeting }: { meeting: Meeting }) {
     onSuccess: (result) => {
       if (result.summary) {
         setLocalHasSummary(true);
-        queryClient.invalidateQueries({ queryKey: queryKeys.meetings.recent() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.rooms.recent() });
       }
     },
   });

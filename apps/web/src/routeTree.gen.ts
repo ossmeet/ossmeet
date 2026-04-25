@@ -16,12 +16,14 @@ import { Route as RefundRouteImport } from './routes/refund'
 import { Route as RecorderRouteImport } from './routes/recorder'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as CodeRouteImport } from './routes/$code'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as ApiWikiRouteImport } from './routes/api/wiki'
+import { Route as ApiLlmsDotjsonRouteImport } from './routes/api/llms[.]json'
 import { Route as AuthedSpacesIndexRouteImport } from './routes/_authed/spaces/index'
 import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings/index'
 import { Route as AuthedDashboardIndexRouteImport } from './routes/_authed/dashboard/index'
@@ -74,6 +76,11 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/pricing.lazy').then((d) => d.Route))
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -92,7 +99,7 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -101,6 +108,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
 const ApiWikiRoute = ApiWikiRouteImport.update({
   id: '/api/wiki',
   path: '/api/wiki',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLlmsDotjsonRoute = ApiLlmsDotjsonRouteImport.update({
+  id: '/api/llms.json',
+  path: '/api/llms.json',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedSpacesIndexRoute = AuthedSpacesIndexRouteImport.update({
@@ -199,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$code': typeof CodeRoute
   '/auth': typeof AuthRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/recorder': typeof RecorderRoute
@@ -206,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
+  '/api/llms.json': typeof ApiLlmsDotjsonRoute
   '/api/wiki': typeof ApiWikiRoute
   '/invite/$token': typeof InviteTokenRoute
   '/dashboard/$code': typeof AuthedDashboardCodeRoute
@@ -229,6 +243,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$code': typeof CodeRoute
   '/auth': typeof AuthRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/recorder': typeof RecorderRoute
@@ -236,6 +251,7 @@ export interface FileRoutesByTo {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
+  '/api/llms.json': typeof ApiLlmsDotjsonRoute
   '/api/wiki': typeof ApiWikiRoute
   '/invite/$token': typeof InviteTokenRoute
   '/dashboard/$code': typeof AuthedDashboardCodeRoute
@@ -261,6 +277,7 @@ export interface FileRoutesById {
   '/$code': typeof CodeRoute
   '/_authed': typeof AuthedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/recorder': typeof RecorderRoute
@@ -268,6 +285,7 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
+  '/api/llms.json': typeof ApiLlmsDotjsonRoute
   '/api/wiki': typeof ApiWikiRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_authed/dashboard/$code': typeof AuthedDashboardCodeRoute
@@ -293,6 +311,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$code'
     | '/auth'
+    | '/llms.txt'
     | '/pricing'
     | '/privacy'
     | '/recorder'
@@ -300,6 +319,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/verify'
+    | '/api/llms.json'
     | '/api/wiki'
     | '/invite/$token'
     | '/dashboard/$code'
@@ -323,6 +343,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$code'
     | '/auth'
+    | '/llms.txt'
     | '/pricing'
     | '/privacy'
     | '/recorder'
@@ -330,6 +351,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/verify'
+    | '/api/llms.json'
     | '/api/wiki'
     | '/invite/$token'
     | '/dashboard/$code'
@@ -354,6 +376,7 @@ export interface FileRouteTypes {
     | '/$code'
     | '/_authed'
     | '/auth'
+    | '/llms.txt'
     | '/pricing'
     | '/privacy'
     | '/recorder'
@@ -361,6 +384,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/verify'
+    | '/api/llms.json'
     | '/api/wiki'
     | '/invite/$token'
     | '/_authed/dashboard/$code'
@@ -386,6 +410,7 @@ export interface RootRouteChildren {
   CodeRoute: typeof CodeRoute
   AuthedRoute: typeof AuthedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   RecorderRoute: typeof RecorderRoute
@@ -393,6 +418,7 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
   VerifyRoute: typeof VerifyRoute
+  ApiLlmsDotjsonRoute: typeof ApiLlmsDotjsonRoute
   ApiWikiRoute: typeof ApiWikiRoute
   InviteTokenRoute: typeof InviteTokenRoute
   ApiAiAssistantRoute: typeof ApiAiAssistantRoute
@@ -459,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -499,6 +532,13 @@ declare module '@tanstack/react-router' {
       path: '/api/wiki'
       fullPath: '/api/wiki'
       preLoaderRoute: typeof ApiWikiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/llms.json': {
+      id: '/api/llms.json'
+      path: '/api/llms.json'
+      fullPath: '/api/llms.json'
+      preLoaderRoute: typeof ApiLlmsDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/spaces/': {
@@ -640,6 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   CodeRoute: CodeRoute,
   AuthedRoute: AuthedRouteWithChildren,
   AuthRoute: AuthRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   RecorderRoute: RecorderRoute,
@@ -647,6 +688,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
   VerifyRoute: VerifyRoute,
+  ApiLlmsDotjsonRoute: ApiLlmsDotjsonRoute,
   ApiWikiRoute: ApiWikiRoute,
   InviteTokenRoute: InviteTokenRoute,
   ApiAiAssistantRoute: ApiAiAssistantRoute,

@@ -129,20 +129,22 @@ interface FinalizeSessionIfEmptyInput {
   meetingId: string;
   now?: Date;
   onlyActive?: boolean;
+  ignorePendingParticipants?: boolean;
   env?: Pick<Env, "R2_BUCKET">;
 }
 
 export async function finalizeSessionIfEmpty(
   db: Database,
-  { meetingId, now = new Date(), onlyActive = true, env }: FinalizeSessionIfEmptyInput,
+  { meetingId, now = new Date(), onlyActive = true, ignorePendingParticipants = false, env }: FinalizeSessionIfEmptyInput,
 ): Promise<FinalizedSessionInfo | null> {
+  const occupyingStatuses = ignorePendingParticipants ? (["active"] as const) : CURRENT_MEETING_PARTICIPANT_STATUSES;
   const [activeCount] = await db
     .select({ count: count() })
     .from(meetingParticipants)
     .where(
       and(
         eq(meetingParticipants.sessionId, meetingId),
-        inArray(meetingParticipants.status, CURRENT_MEETING_PARTICIPANT_STATUSES),
+        inArray(meetingParticipants.status, occupyingStatuses),
       )
     );
 

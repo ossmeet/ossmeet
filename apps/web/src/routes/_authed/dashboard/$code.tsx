@@ -12,6 +12,6 @@ export const Route = createFileRoute("/_authed/dashboard/$code")({
     stringify: ({ code }) => ({ code }),
   },
   loader: async ({ context, params }) => {
-    await context.queryClient.ensureQueryData(meetingSummaryQueryOptions(params.code));
+    await context.queryClient.prefetchQuery(meetingSummaryQueryOptions(params.code));
   },
 });

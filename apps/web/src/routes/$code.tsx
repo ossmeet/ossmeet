@@ -4,6 +4,7 @@ import { markMeetingEntryMetric } from "@/lib/meeting/entry-metrics";
 import { preloadMeetingWhiteboardModule } from "@/lib/meeting/preload-whiteboard";
 import { sessionQueryOptions } from "@/queries/session";
 import { lookupMeeting } from "@/server/meetings/admission";
+import { createPageHead } from "@/lib/seo";
 
 function MeetingNotFoundComponent() {
   return (
@@ -71,17 +72,16 @@ export const Route = createFileRoute("/$code")({
     },
     stringify: ({ code }) => ({ code }),
   },
-  // Don't flash the spinner for paths that don't look like meeting codes.
-  // Invalid codes are rejected synchronously in beforeLoad before any async
-  // work starts, so there is nothing to wait for.
   pendingMs: 0,
   pendingMinMs: 0,
+  head: () =>
+    createPageHead({
+      title: "Join Meeting — OSSMeet",
+      description: "Join a live OSSMeet session using a meeting code.",
+      noindex: true,
+      canonical: false,
+    }),
   ssr: false,
-  beforeLoad: ({ params }) => {
-    if (!MEETING_CODE_RE.test(params.code)) {
-      throw notFound({ routeId: rootRouteId });
-    }
-  },
   pendingComponent: MeetingPendingComponent,
   notFoundComponent: MeetingNotFoundComponent,
   loader: async ({ context, params }) => {
@@ -92,9 +92,7 @@ export const Route = createFileRoute("/$code")({
     // Blocking pre-flight: verify the meeting actually exists BEFORE the lazy
     // component mounts and spins up the preview UI. Saves the "preview then
     // 'no such meeting'" dance for typos and random valid-format codes.
-    const lookup = await lookupMeeting({ data: { code: params.code } }).catch(
-      () => ({ exists: false as const }),
-    );
+    const lookup = await lookupMeeting({ data: { code: params.code } });
     if (!lookup.exists) {
       throw notFound();
     }

@@ -3,30 +3,14 @@ import type { Plugin } from "vite";
 /**
  * SSR Client Stubs Plugin
  *
- * Two-way stubbing strategy:
+ * Replaces heavy client-only libraries with empty stubs during the SSR build.
+ * These modules need DOM/WebRTC APIs that don't exist in Cloudflare Workers and
+ * would otherwise bloat the Worker bundle.
  *
- * 1. SSR stubs (STUBBED_MODULES): Replaces heavy client-only libraries with empty stubs
- *    during the SSR build. These need DOM APIs that don't exist in Cloudflare Workers.
- *    Without stubbing, they inflate the Worker bundle (~5.7MB of useless code).
- *
- * 2. Client stubs (SERVER_ONLY_MODULES): Replaces server-only libraries with empty stubs
- *    during the client build. These use Node APIs (node:crypto etc.) that can't run in
- *    the browser. TanStack Start strips server function bodies from client bundles but
- *    top-level imports remain — stubbing them eliminates the dead code and the warning.
- *
- * The plugin accepts additional stubs via options so that private packages (e.g. whiteboard)
- * can register their own vendor stubs without modifying this file.
+ * Client builds are intentionally left alone. TanStack Start should own the
+ * server-function/client boundary instead of masking server-package imports with
+ * synthetic `undefined` exports.
  */
-
-const SERVER_ONLY_MODULES: string[] = [
-  "livekit-server-sdk",
-  "drizzle-orm",
-  "@ossmeet/db",
-  "@simplewebauthn/server",
-  "ai",
-  "@ai-sdk/google",
-  "@ai-sdk/openai",
-];
 
 const STUBBED_MODULES: (string | RegExp)[] = [
   "livekit-client",
@@ -51,34 +35,6 @@ const KNOWN_STUB_EXPORTS: Record<string, string[]> = {
     "sqliteTable", "text", "integer", "real", "blob",
     "sqliteView", "sqliteIndex",
   ],
-  "@ossmeet/db": ["createDb"],
-  "@ossmeet/db/schema": [
-    "users", "sessions", "accounts", "verifications",
-    "passkeys", "devices",
-    "spaces", "spaceMembers", "spaceInvites",
-    "rooms", "meetingSessions", "meetingParticipants", "transcripts",
-    "meetingSummaries", "meetingArtifacts", "spaceAssets",
-    "usersRelations", "sessionsRelations", "accountsRelations",
-    "passkeysRelations", "devicesRelations", "spacesRelations",
-    "spaceMembersRelations", "spaceInvitesRelations",
-    "roomsRelations", "meetingSessionsRelations",
-    "transcriptsRelations", "meetingSummariesRelations",
-    "meetingParticipantsRelations", "meetingArtifactsRelations",
-    "spaceAssetsRelations",
-  ],
-  "@simplewebauthn/server": [
-    "generateAuthenticationOptions",
-    "generateRegistrationOptions",
-    "verifyAuthenticationResponse",
-    "verifyRegistrationResponse",
-  ],
-  "@simplewebauthn/server/helpers": ["isoBase64URL"],
-  "ai": [
-    "streamText", "generateText", "generateObject", "streamObject",
-    "tool", "embed", "embedMany",
-  ],
-  "@ai-sdk/google": ["createGoogleGenerativeAI", "google"],
-  "@ai-sdk/openai": ["createOpenAI", "openai"],
   "livekit-client": [
     "ConnectionState", "VideoPresets", "RoomEvent", "Room",
     "LocalTrack", "RemoteParticipant", "Track",
@@ -115,21 +71,6 @@ export interface AdditionalSsrStubs {
   exports: Record<string, string[]>;
 }
 
-function buildHintRe(modules: (string | RegExp)[]): RegExp {
-  const literals = modules.filter((m): m is string => typeof m === "string");
-  if (literals.length === 0) return /(?!)/;
-  const escaped = literals.map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return new RegExp(`^(?:${escaped.join("|")})(?:\\/|$)`);
-}
-
-const SERVER_ONLY_HINT_RE = buildHintRe(SERVER_ONLY_MODULES);
-
-function matchesServerOnlyModule(source: string): boolean {
-  return SERVER_ONLY_MODULES.some(
-    (m) => source === m || source.startsWith(m + "/")
-  );
-}
-
 function matchesStubbedModule(source: string, allStubbed: (string | RegExp)[]): boolean {
   for (const pattern of allStubbed) {
     if (typeof pattern === "string") {
@@ -144,7 +85,11 @@ function matchesStubbedModule(source: string, allStubbed: (string | RegExp)[]): 
 export function ssrClientStubs(options?: { additional?: AdditionalSsrStubs }): Plugin {
   const allStubbed = [...STUBBED_MODULES, ...(options?.additional?.modules ?? [])];
   const allExports = { ...KNOWN_STUB_EXPORTS, ...(options?.additional?.exports ?? {}) };
-  const stubbedHintRe = buildHintRe(allStubbed);
+  const literals = allStubbed.filter((m): m is string => typeof m === "string");
+  const escaped = literals.map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const stubbedHintRe = escaped.length > 0
+    ? new RegExp(`^(?:${escaped.join("|")})(?:\\/|$)`)
+    : /(?!)/;
 
   const STUB_ID = "virtual:ssr-client-stub";
   const RESOLVED_STUB_ID = "\0" + STUB_ID;
@@ -153,7 +98,7 @@ export function ssrClientStubs(options?: { additional?: AdditionalSsrStubs }): P
     name: "ssr-client-stubs",
     enforce: "pre",
 
-    resolveId(source, _importer, options) {
+    resolveId(source) {
       if (
         source[0] === "." ||
         source[0] === "\0" ||
@@ -163,15 +108,10 @@ export function ssrClientStubs(options?: { additional?: AdditionalSsrStubs }): P
         return null;
       }
 
-      const isSSR = !!options?.ssr;
-      if (isSSR) {
-        if (!stubbedHintRe.test(source) && !allStubbed.some((p) => typeof p !== "string" && p.test(source))) return null;
-        if (!matchesStubbedModule(source, allStubbed)) return null;
-      } else {
-        if (!SERVER_ONLY_HINT_RE.test(source) || !matchesServerOnlyModule(source)) {
-          return null;
-        }
-      }
+      const isServer = this.environment.config.consumer === "server";
+      if (!isServer) return null;
+      if (!stubbedHintRe.test(source) && !allStubbed.some((p) => typeof p !== "string" && p.test(source))) return null;
+      if (!matchesStubbedModule(source, allStubbed)) return null;
 
       return { id: `${RESOLVED_STUB_ID}?source=${encodeURIComponent(source)}`, syntheticNamedExports: true };
     },
@@ -187,7 +127,6 @@ export function ssrClientStubs(options?: { additional?: AdditionalSsrStubs }): P
 
       return {
         code: `export default {};\n${namedExports}`,
-        syntheticNamedExports: true,
       };
     },
   };

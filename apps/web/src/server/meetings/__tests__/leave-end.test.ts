@@ -121,7 +121,7 @@ function buildEnv(): Env {
 
 describe("executeLeaveMeeting", () => {
   it("marks a guest participant left when the guest secret matches", async () => {
-    const { executeLeaveMeeting } = await import("../leave-end");
+    const { executeLeaveMeeting } = await import("../leave-end.server");
 
     await insertUser("host");
     await insertMeeting("meeting_1", "host");
@@ -161,7 +161,7 @@ describe("executeLeaveMeeting", () => {
   });
 
   it("does not mark an authenticated participant left when auth context is missing", async () => {
-    const { executeLeaveMeeting } = await import("../leave-end");
+    const { executeLeaveMeeting } = await import("../leave-end.server");
 
     await insertUser("host");
     await insertUser("member");
@@ -196,7 +196,7 @@ describe("executeLeaveMeeting", () => {
   });
 
   it("promotes the next authenticated participant in LiveKit when the host leaves", async () => {
-    const { executeLeaveMeeting } = await import("../leave-end");
+    const { executeLeaveMeeting } = await import("../leave-end.server");
 
     await insertUser("host");
     await insertUser("member");
@@ -254,7 +254,7 @@ describe("executeLeaveMeeting", () => {
   });
 
   it("can record a passive leave without realtime teardown or empty finalization", async () => {
-    const { executeLeaveMeeting } = await import("../leave-end");
+    const { executeLeaveMeeting } = await import("../leave-end.server");
 
     await insertUser("host");
     await insertUser("member");

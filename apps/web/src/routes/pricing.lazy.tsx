@@ -4,31 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, X, Zap, Building2, Users, ArrowLeft } from "lucide-react";
 import { getPlanLimits, type PlanType } from "@ossmeet/shared";
 import { useIdleEnabled } from "@/lib/hooks/use-idle-enabled";
+import { openPaddleCheckout } from "@/lib/paddle-checkout";
 import { sessionQueryOptions } from "@/queries/session";
-
-declare const Paddle: {
-  Initialize: (opts: { token: string }) => void;
-  Environment?: { set?: (env: string) => void };
-  Checkout: {
-    open: (opts: {
-      items: Array<{ priceId: string; quantity: number }>;
-      customer?: { id?: string; email?: string };
-      customData?: Record<string, string>;
-    }) => void;
-  };
-};
-
-async function loadPaddleJs(): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (typeof Paddle !== "undefined") return;
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Paddle.js"));
-    document.head.appendChild(script);
-  });
-}
 
 export const Route = createLazyFileRoute("/pricing")({
   component: PricingPage,
@@ -208,11 +185,9 @@ const FEATURES: FeatureRow[] = [
 function PricingCard({
   tier,
   currentPlan,
-  userId,
 }: {
   tier: PricingTier;
   currentPlan?: PlanType | null;
-  userId?: string;
 }) {
   const isCurrentPlan = currentPlan === tier.id;
   const [loading, setLoading] = useState(false);
@@ -229,22 +204,15 @@ function PricingCard({
         body: JSON.stringify({ plan: tier.id }),
       });
       if (!res.ok) throw new Error(await res.text());
-      const { customerId, priceId } = (await res.json()) as {
+      const { customerId, priceId, email } = (await res.json()) as {
         customerId: string;
         priceId: string;
         email: string;
       };
-      await loadPaddleJs();
-      const clientToken = (import.meta.env as Record<string, string>).VITE_PADDLE_CLIENT_TOKEN;
-      const environment = (import.meta.env as Record<string, string>).PADDLE_ENVIRONMENT;
-      Paddle.Initialize({ token: clientToken });
-      if (environment === "sandbox") {
-        Paddle.Environment?.set?.("sandbox");
-      }
-      Paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customer: { id: customerId },
-        customData: userId ? { userId } : undefined,
+      await openPaddleCheckout({
+        priceId,
+        customerId,
+        email,
       });
     } catch (err) {
       console.error("Checkout failed:", err);
@@ -361,7 +329,6 @@ function PricingPage() {
     enabled: sessionEnabled,
   });
   const currentPlan = session?.user?.plan;
-  const userId = session?.user?.id;
 
   return (
     <div className="min-h-screen bg-[#f5f4f2] font-sans">
@@ -401,7 +368,7 @@ function PricingPage() {
         {/* Pricing cards */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {TIERS.map((tier) => (
-            <PricingCard key={tier.id} tier={tier} currentPlan={currentPlan} userId={userId} />
+            <PricingCard key={tier.id} tier={tier} currentPlan={currentPlan} />
           ))}
         </div>
 

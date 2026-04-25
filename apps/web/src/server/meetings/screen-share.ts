@@ -1,13 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createDb } from "@ossmeet/db";
+import type { Database } from "@ossmeet/db";
 import { meetingSessions, meetingParticipants } from "@ossmeet/db/schema";
 import { eq, and, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { CURRENT_MEETING_PARTICIPANT_STATUSES, Errors } from "@ossmeet/shared";
-import { livekitHttpUrl } from "@/lib/meeting/livekit-helpers";
-import { RoomServiceClient, TrackSource } from "livekit-server-sdk";
-
-const AUTH_HELPERS_MODULE = "../auth/helpers";
+import { authMiddleware } from "../middleware";
+import { updateScreenSharePermission } from "./screen-share.server";
 
 const grantScreenShareSchema = z.object({
   meetingId: z.string(),
@@ -16,7 +14,7 @@ const grantScreenShareSchema = z.object({
 });
 
 export async function getGrantableMeetingParticipant(
-  db: ReturnType<typeof createDb>,
+  db: Database,
   meetingId: string,
   targetIdentity: string,
 ) {
@@ -44,21 +42,13 @@ export async function getGrantableMeetingParticipant(
 }
 
 export const grantScreenShare = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .inputValidator(grantScreenShareSchema)
-  .handler(async ({ data }) => {
-    const { getEnv, requireAuth, enforceRateLimit } = await import(
-      /* @vite-ignore */ AUTH_HELPERS_MODULE
-    );
-    const env = await getEnv();
-    const user = await requireAuth();
-    const db = createDb(env.DB);
-
-    await enforceRateLimit(env, `screen-share:grant:${user.id}`);
-
+  .handler(async ({ data, context: { user, env, db } }) => {
     const meeting = await db.query.meetingSessions.findFirst({
       where: and(
         eq(meetingSessions.id, data.meetingId),
-        eq(meetingSessions.status, "active")
+        eq(meetingSessions.status, "active"),
       ),
     });
 
@@ -71,25 +61,10 @@ export const grantScreenShare = createServerFn({ method: "POST" })
       data.targetIdentity,
     );
 
-    const httpUrl = livekitHttpUrl(env.LIVEKIT_URL);
-    const roomService = new RoomServiceClient(httpUrl, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
-    const roomName = `meet-${meeting.id}`;
-
-    const sources = data.allow
-      ? [TrackSource.CAMERA, TrackSource.MICROPHONE, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO]
-      : [TrackSource.CAMERA, TrackSource.MICROPHONE];
-
     const participantIdentity =
       participant.livekitIdentity ?? participant.userId ?? data.targetIdentity;
 
-    await roomService.updateParticipant(roomName, participantIdentity, {
-      permission: {
-        canPublish: true,
-        canPublishData: true,
-        canSubscribe: true,
-        canPublishSources: sources,
-      },
-    });
+    await updateScreenSharePermission(env, meeting.id, participantIdentity, data.allow);
 
     return { success: true };
   });

@@ -32,6 +32,7 @@ import {
   enforceSessionCap,
 } from "./helpers";
 import { generateSessionToken, hashSessionToken } from "@/lib/auth/crypto";
+import { withD1Retry } from "@/lib/db-utils";
 
 const PASSKEY_CHALLENGE_TTL_MS = 10 * 60 * 1000;
 const RP_NAME = "OSSMeet";
@@ -292,15 +293,17 @@ export const finishPasskeyAuthentication = createServerFn({ method: "POST" })
     const sessionToken = generateSessionToken();
     const sessionTokenHash = await hashSessionToken(sessionToken);
     const nowMs = Date.now();
-    await db.insert(sessions).values({
-      id: generateId("SESSION"),
-      tokenHash: sessionTokenHash,
-      userId: user.id,
-      expiresAt: new Date(nowMs + SESSION_EXPIRY_MS),
-      absoluteExpiresAt: new Date(nowMs + SESSION_ABSOLUTE_EXPIRY_MS),
-      ipAddress: getClientIP(),
-      userAgent: request.headers.get("User-Agent")?.slice(0, 500) ?? null,
-    });
+    await withD1Retry(() =>
+      db.insert(sessions).values({
+        id: generateId("SESSION"),
+        tokenHash: sessionTokenHash,
+        userId: user.id,
+        expiresAt: new Date(nowMs + SESSION_EXPIRY_MS),
+        absoluteExpiresAt: new Date(nowMs + SESSION_ABSOLUTE_EXPIRY_MS),
+        ipAddress: getClientIP(),
+        userAgent: request.headers.get("User-Agent")?.slice(0, 500) ?? null,
+      }),
+    );
 
     await enforceSessionCap(db, user.id);
     await rememberDevice(db, env, user.id).catch(() => {});

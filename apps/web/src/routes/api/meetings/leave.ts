@@ -7,27 +7,19 @@ import {
   getGuestCookieSecretFromCookie,
   verifySessionFromRawRequest,
 } from "@/server/auth/helpers";
-import { executeLeaveMeeting } from "@/server/meetings/leave-end";
+import { executeLeaveMeeting } from "@/server/meetings/leave-end.server";
 
 const leaveBeaconSchema = z.object({
   sessionId: z.string().min(1).optional(),
   meetingId: z.string().min(1).optional(),
   participantId: z.string().min(1).optional(),
+  finalizeIfEmpty: z.boolean().optional(),
 });
 
 function getClientIpFromRequest(request: Request): string {
-  const cfIp = request.headers.get("CF-Connecting-IP");
-  if (cfIp) return cfIp;
-
-  const forwardedFor = request.headers.get("X-Forwarded-For");
-  if (forwardedFor) {
-    const first = forwardedFor.split(",")[0]?.trim();
-    if (first) return first;
-  }
-
-  const realIp = request.headers.get("X-Real-IP");
-  if (realIp) return realIp;
-  return "unknown";
+  // CF-Connecting-IP is authoritative behind Cloudflare; never trust
+  // X-Forwarded-For in production as it can be spoofed by clients.
+  return request.headers.get("CF-Connecting-IP") ?? "unknown";
 }
 
 export const Route = createFileRoute("/api/meetings/leave")({
@@ -71,7 +63,7 @@ export const Route = createFileRoute("/api/meetings/leave")({
               : `meeting:leave:${getClientIpFromRequest(request)}`,
             removeFromLiveKit: false,
             promoteSuccessor: false,
-            finalizeIfEmpty: false,
+            finalizeIfEmpty: parsed.data.finalizeIfEmpty ?? false,
           });
 
           return Response.json(result);

@@ -233,7 +233,8 @@ export default createServerEntry({
     // origin validation is not applicable and must be skipped for these paths.
     const isLiveKitWebhook = url.pathname === "/api/livekit/webhook";
     const isWhiteboardSnapshotCallback = url.pathname === "/api/whiteboard/snapshot";
-    const skipCsrfOriginValidation = isLiveKitWebhook || isWhiteboardSnapshotCallback;
+    const isBillingWebhook = url.pathname === "/api/billing/webhook";
+    const skipCsrfOriginValidation = isLiveKitWebhook || isWhiteboardSnapshotCallback || isBillingWebhook;
 
     if ((url.pathname.startsWith("/_serverFn/") || url.pathname.startsWith("/api/")) && !skipCsrfOriginValidation) {
       if (!validateCsrfOrigin(requestWithId, { appUrl: env?.APP_URL, environment: env?.ENVIRONMENT })) {
@@ -370,16 +371,20 @@ export default createServerEntry({
 
       const contentType = response.headers.get("Content-Type") || "";
       if (contentType.includes("text/html")) {
+        const isCacheablePublicHtml = response.status === 200;
         if (!response.headers.has("Cache-Control")) {
           response.headers.set(
             "Cache-Control",
-            `public, max-age=${PUBLIC_HTML_CACHE_TTL}, s-maxage=${PUBLIC_HTML_CACHE_TTL}`,
+            isCacheablePublicHtml
+              ? `public, max-age=${PUBLIC_HTML_CACHE_TTL}, s-maxage=${PUBLIC_HTML_CACHE_TTL}`
+              : "no-store",
           );
         }
         const final = withRequestId(addSecurityHeaders(response, securityOpts), requestId);
         // Populate Cache API so the next request for this public page is instant.
-        // Only cache GET responses — a POST returning HTML must not poison the GET cache.
-        if (acceptsHtml && !isDevRequest && request.method === "GET") {
+        // Only cache successful GET HTML responses — caching error pages or
+        // transient failures would turn brief outages into sticky failures.
+        if (acceptsHtml && !isDevRequest && request.method === "GET" && isCacheablePublicHtml) {
           const cache = await getPublicCache();
           if (cache) {
             const cacheKey = new Request(url.toString(), { method: "GET" });

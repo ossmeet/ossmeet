@@ -13,7 +13,7 @@ import { lt, and, eq, isNotNull, or, inArray } from "drizzle-orm";
 import { logError, logInfo, logWarn } from "@/lib/logger";
 import { chunkArray } from "@ossmeet/shared";
 import type { PlanType } from "@ossmeet/shared";
-import { terminateMeetingRoom } from "./meetings/leave-end";
+import { terminateMeetingRoom } from "./meetings/leave-end.server";
 import { archiveMeetingTranscriptsToR2 } from "./transcripts/archive";
 import { finalizeMeetingsEndByHostPlan } from "./meetings/finalize";
 import { registerMeetingArtifactMetadata } from "./assets/register";
@@ -166,27 +166,27 @@ async function cleanupZombieMeetings(
 ): Promise<void> {
   try {
     const threshold = new Date(now.getTime() - ZOMBIE_THRESHOLD_MS);
-    const zombies = await db
-      .select({ id: meetingSessions.id, activeEgressId: meetingSessions.activeEgressId, hostId: meetingSessions.hostId })
+    // JOIN users to fetch host plans in the same query as zombie meetings
+    const zombieRows = await db
+      .select({
+        id: meetingSessions.id,
+        activeEgressId: meetingSessions.activeEgressId,
+        hostId: meetingSessions.hostId,
+        hostPlan: users.plan,
+      })
       .from(meetingSessions)
+      .innerJoin(users, eq(meetingSessions.hostId, users.id))
       .where(and(eq(meetingSessions.status, "active"), lt(meetingSessions.startedAt, threshold)))
       .limit(ZOMBIE_BATCH_LIMIT);
 
-    if (zombies.length === 0) return;
+    if (zombieRows.length === 0) return;
 
+    const zombies = zombieRows;
     const allIds = zombies.map((m) => m.id);
-
-    // Fetch host plans so we can set the correct retainUntil per meeting
-    const hostIds = [...new Set(zombies.map((m) => m.hostId))];
-    const hostRows = await db
-      .select({ id: users.id, plan: users.plan })
-      .from(users)
-      .where(inArray(users.id, hostIds));
-    const hostPlanMap = new Map(hostRows.map((h) => [h.id, h.plan as PlanType]));
 
     const hostPlanByMeetingId = new Map<string, PlanType>();
     for (const zombie of zombies) {
-      hostPlanByMeetingId.set(zombie.id, hostPlanMap.get(zombie.hostId) ?? "free");
+      hostPlanByMeetingId.set(zombie.id, (zombie.hostPlan as PlanType) ?? "free");
     }
 
     // Commit DB state first so no subsequent code sees these as active.

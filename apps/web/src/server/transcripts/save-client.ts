@@ -36,14 +36,12 @@ export function buildTrustedTranscriptRows(
     userId: string | null;
   },
   fallbackUserId: string,
-  segments: Array<{ text: string; startedAt: number; language?: string; clientSegmentId?: string; participantIdentity?: string; participantName?: string }>,
+  segments: Array<{ text: string; startedAt: number; language?: string; clientSegmentId?: string }>,
 ) {
   const now = new Date();
-  const defaultIdentity = participant.livekitIdentity ?? participant.userId ?? fallbackUserId;
-  const defaultName = participant.displayName;
+  const identity = participant.livekitIdentity ?? participant.userId ?? fallbackUserId;
+  const name = participant.displayName;
   return segments.map((seg, idx) => {
-    const identity = seg.participantIdentity ?? defaultIdentity;
-    const name = seg.participantName ?? defaultName;
     return {
       id: generateId("TRANSCRIPT"),
       sessionId,
@@ -108,8 +106,6 @@ export const saveTranscriptSegments = createServerFn({ method: "POST" })
         startedAt: seg.startedAt,
         language: seg.language,
         clientSegmentId: seg.clientSegmentId,
-        participantIdentity: seg.participantIdentity,
-        participantName: seg.participantName,
       })),
     );
 

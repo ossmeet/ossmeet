@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { spaces, spaceMembers, spaceInvites } from "@ossmeet/db/schema";
-import { eq, and, gte, lt, sql, isNull } from "drizzle-orm";
+import { eq, and, gte, sql, isNull } from "drizzle-orm";
 import {
   createInviteSchema,
   joinViaInviteSchema,
@@ -87,59 +87,80 @@ export const joinViaInvite = createServerFn({ method: "POST" })
 
     const memberId = generateId("MEMBER");
     const now = new Date();
+    const nowSeconds = Math.floor(now.getTime() / 1000);
 
     // For limited invites, pre-check capacity before attempting the insert
     if (invite.maxUses !== null && invite.useCount >= invite.maxUses) {
       throw Errors.VALIDATION("This invite has been used up");
     }
 
-    // Insert the member first — unique constraint prevents duplicates.
-    // Only increment use-count AFTER successful insert to avoid consuming
-    // uses on failed inserts (which would permanently lock limited invites).
+    // Keep the membership insert, invite usage update, and space touch inside a
+    // single D1 batch transaction so a later failure cannot leave partial state.
     try {
-      await db.insert(spaceMembers).values({
-        id: memberId,
-        spaceId: invite.spaceId,
-        userId: user.id,
-        role: effectiveRole,
-        joinedAt: now,
-      });
+      if (invite.maxUses !== null) {
+        const [memberInsertResult] = await env.DB.batch([
+          env.DB
+            .prepare(
+              `INSERT INTO space_members (id, space_id, user_id, role, joined_at)
+               SELECT ?, ?, ?, ?, ?
+               WHERE EXISTS (
+                 SELECT 1
+                 FROM space_invites
+                 WHERE id = ?
+                   AND max_uses IS NOT NULL
+                   AND use_count < max_uses
+               )`,
+            )
+            .bind(memberId, invite.spaceId, user.id, effectiveRole, nowSeconds, invite.id),
+          env.DB
+            .prepare(
+              `UPDATE space_invites
+               SET use_count = use_count + 1
+               WHERE id = ?
+                 AND max_uses IS NOT NULL
+                 AND use_count < max_uses
+                 AND EXISTS (SELECT 1 FROM space_members WHERE id = ?)`,
+            )
+            .bind(invite.id, memberId),
+          env.DB
+            .prepare(
+              `UPDATE spaces
+               SET updated_at = ?
+               WHERE id = ?
+                 AND EXISTS (SELECT 1 FROM space_members WHERE id = ?)`,
+            )
+            .bind(nowSeconds, invite.spaceId, memberId),
+        ]);
+
+        if (getRunChanges(memberInsertResult) === 0) {
+          throw Errors.VALIDATION("This invite has been used up");
+        }
+      } else {
+        await db.batch([
+          db.insert(spaceMembers).values({
+            id: memberId,
+            spaceId: invite.spaceId,
+            userId: user.id,
+            role: effectiveRole,
+            joinedAt: now,
+          }),
+          db
+            .update(spaceInvites)
+            .set({ useCount: sql`${spaceInvites.useCount} + 1` })
+            .where(eq(spaceInvites.id, invite.id)),
+          db.update(spaces).set({ updatedAt: now }).where(eq(spaces.id, invite.spaceId)),
+        ]);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("UNIQUE")) {
         return { spaceId: invite.spaceId, alreadyMember: true };
       }
+      if (err instanceof Error && "code" in err) {
+        throw err;
+      }
       throw Errors.VALIDATION("Failed to join space");
     }
-
-    // Now atomically increment use-count (with capacity guard for limited invites)
-    if (invite.maxUses !== null) {
-      const updateResult = await db
-        .update(spaceInvites)
-        .set({ useCount: sql`${spaceInvites.useCount} + 1` })
-        .where(
-          and(
-            eq(spaceInvites.id, invite.id),
-            lt(spaceInvites.useCount, spaceInvites.maxUses)
-          )
-        )
-        .run();
-
-      const changes = getRunChanges(updateResult);
-      if (changes === 0) {
-        // Race: invite was used up between our check and here — roll back member
-        await db.delete(spaceMembers).where(eq(spaceMembers.id, memberId));
-        throw Errors.VALIDATION("This invite has been used up");
-      }
-    } else {
-      await db
-        .update(spaceInvites)
-        .set({ useCount: sql`${spaceInvites.useCount} + 1` })
-        .where(eq(spaceInvites.id, invite.id));
-    }
-
-    // Touch spaces.updatedAt on membership change
-    await db.update(spaces).set({ updatedAt: now }).where(eq(spaces.id, invite.spaceId));
 
     return { spaceId: invite.spaceId, alreadyMember: false };
   });

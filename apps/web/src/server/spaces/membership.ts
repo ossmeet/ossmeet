@@ -147,7 +147,10 @@ export const removeMember = createServerFn({ method: "POST" })
 
     await evictUserFromSpaceMeetings(db, env, data.spaceId, data.userId);
 
-    // Touch spaces.updatedAt on membership change
+    await db.delete(spaceMembers).where(
+      and(eq(spaceMembers.spaceId, data.spaceId), eq(spaceMembers.userId, data.userId)),
+    );
+
     await db.update(spaces).set({ updatedAt: new Date() }).where(eq(spaces.id, data.spaceId));
 
     return { success: true };
@@ -169,6 +172,10 @@ export const leaveSpace = createServerFn({ method: "POST" })
     }
 
     await evictUserFromSpaceMeetings(db, env, data.spaceId, user.id);
+
+    await db.delete(spaceMembers).where(
+      and(eq(spaceMembers.spaceId, data.spaceId), eq(spaceMembers.userId, user.id)),
+    );
 
     await db.update(spaces).set({ updatedAt: new Date() }).where(eq(spaces.id, data.spaceId));
 

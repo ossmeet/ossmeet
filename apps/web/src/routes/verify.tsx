@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { sanitizeInternalRedirect } from "@/lib/safe-redirect";
+import { createPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/verify")({
   validateSearch: (raw): { email: string; mode?: "signup" | "login"; redirect?: string } => ({
@@ -15,7 +16,11 @@ export const Route = createFileRoute("/verify")({
       throw redirect({ to: "/auth" });
     }
   },
-  head: () => ({
-    meta: [{ title: "Verify Email — OSSMeet" }],
-  }),
+  head: () =>
+    createPageHead({
+      title: "Verify Email — OSSMeet",
+      description: "Verify your email address to continue signing in to OSSMeet.",
+      noindex: true,
+      canonical: false,
+    }),
 });

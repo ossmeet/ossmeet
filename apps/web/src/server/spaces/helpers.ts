@@ -7,7 +7,6 @@ import {
 } from "@ossmeet/shared";
 import { logError } from "@/lib/logger";
 import { livekitHttpUrl } from "@/lib/meeting/livekit-helpers";
-import { RoomServiceClient } from "livekit-server-sdk";
 import type { Database } from "@ossmeet/db";
 
 const PARTICIPANT_BY_MEETING_CHUNK_SIZE =
@@ -88,6 +87,7 @@ export async function evictUserFromSpaceMeetings(
     }
 
     const lkHttpUrl = livekitHttpUrl(env.LIVEKIT_URL);
+    const { RoomServiceClient } = await import(/* @vite-ignore */ "livekit-server-sdk");
     const roomSvc = new RoomServiceClient(lkHttpUrl, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
     await Promise.allSettled(
       activeParticipantRows.map((participant) => {

@@ -11,7 +11,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createMeeting } from "@/server/meetings/crud";
 import { beginMeetingEntryFlow } from "@/lib/meeting/entry-metrics";
 import { preloadMeetingRoute, scheduleIdleTask } from "@/lib/meeting/preload-route";
-import { preloadMeetingWhiteboardModule } from "@/lib/meeting/preload-whiteboard";
 import { getPlanLimits } from "@ossmeet/shared";
 import { sessionQueryOptions } from "@/queries/session";
 import { getErrorMessage } from "@/lib/errors";
@@ -77,13 +76,11 @@ function DashboardPage() {
 
   const handleMeetingIntent = () => {
     preloadMeetingRoute(router).catch(() => {});
-    preloadMeetingWhiteboardModule().catch(() => {});
   };
 
   useEffect(() => {
     return scheduleIdleTask(() => {
       preloadMeetingRoute(router).catch(() => {});
-      preloadMeetingWhiteboardModule().catch(() => {});
     });
   }, [router]);
 

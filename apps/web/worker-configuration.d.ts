@@ -29,6 +29,7 @@ declare namespace Cloudflare {
 		R2_BUCKET_NAME: string;
 		AI_API_KEY: string;
 		AI_MODEL: string;
+		TLDRAW_LICENSE_KEY: string;
 		WHITEBOARD_INTERNAL_SECRET: string;
 		WHITEBOARD_JWT_SECRET: string;
 		UPTIMEROBOT_API_KEY: string;
@@ -47,7 +48,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "APP_NAME" | "WHITEBOARD_URL" | "AI_MODEL_FALLBACK" | "APP_URL" | "ENVIRONMENT" | "AUTH_SECRET" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "RESEND_API_KEY" | "LIVEKIT_URL" | "LIVEKIT_API_KEY" | "LIVEKIT_API_SECRET" | "R2_ACCESS_KEY_ID" | "R2_SECRET_ACCESS_KEY" | "R2_ACCOUNT_ID" | "R2_BUCKET_NAME" | "AI_API_KEY" | "AI_MODEL" | "WHITEBOARD_INTERNAL_SECRET" | "WHITEBOARD_JWT_SECRET">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "APP_NAME" | "WHITEBOARD_URL" | "AI_MODEL_FALLBACK" | "APP_URL" | "ENVIRONMENT" | "AUTH_SECRET" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "RESEND_API_KEY" | "LIVEKIT_URL" | "LIVEKIT_API_KEY" | "LIVEKIT_API_SECRET" | "R2_ACCESS_KEY_ID" | "R2_SECRET_ACCESS_KEY" | "R2_ACCOUNT_ID" | "R2_BUCKET_NAME" | "AI_API_KEY" | "AI_MODEL" | "TLDRAW_LICENSE_KEY" | "WHITEBOARD_INTERNAL_SECRET" | "WHITEBOARD_JWT_SECRET">> {}
 }
 
 // Begin runtime types

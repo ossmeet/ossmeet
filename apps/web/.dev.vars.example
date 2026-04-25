@@ -28,5 +28,7 @@ AI_MODEL=gemini-3.1-flash-lite-preview
 AI_MODEL_FALLBACK=gemma-4-31b-it
 
 # Whiteboard server
+WHITEBOARD_URL=https://whiteboard.ossmeet.com
 WHITEBOARD_INTERNAL_SECRET=
 WHITEBOARD_JWT_SECRET=
+TLDRAW_LICENSE_KEY=

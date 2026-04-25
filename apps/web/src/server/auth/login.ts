@@ -17,6 +17,7 @@ import {
   generateId,
   d1MaxItemsPerStatement,
 } from "@ossmeet/shared";
+import { withD1Retry } from "@/lib/db-utils";
 import { loginSchema, otpVerifySchema, resendOtpSchema, checkEmailSchema, Errors, createValidationError } from "@ossmeet/shared";
 import { eq, and, gte, lt, or, inArray } from "drizzle-orm";
 import { sendEmail, buildOtpEmail } from "@/lib/email";
@@ -53,21 +54,18 @@ export const checkEmailStatus = createServerFn({ method: "POST" })
     await enforceRateLimit(env, `email-check:${normalized}`, true);
     await checkDisposableEmail(normalized);
 
-    const user = await db.query.users.findFirst({
-      where: eq(users.normalizedEmail, normalized),
-      columns: { id: true },
-    });
+    const row = await db
+      .select({ userId: users.id, passkeyId: passkeys.id })
+      .from(users)
+      .leftJoin(passkeys, eq(passkeys.userId, users.id))
+      .where(eq(users.normalizedEmail, normalized))
+      .limit(1);
 
-    if (!user) {
+    if (row.length === 0) {
       return { exists: false, hasPasskey: false };
     }
 
-    const passkey = await db.query.passkeys.findFirst({
-      where: eq(passkeys.userId, user.id),
-      columns: { id: true },
-    });
-
-    return { exists: true, hasPasskey: !!passkey };
+    return { exists: true, hasPasskey: row[0].passkeyId !== null };
   });
 
 /**
@@ -172,15 +170,17 @@ export const verifyLoginOtp = createServerFn({ method: "POST" })
     const expiresAt = new Date(now + SESSION_EXPIRY_MS);
     const absoluteExpiresAt = new Date(now + SESSION_ABSOLUTE_EXPIRY_MS);
 
-    await db.insert(sessions).values({
-      id: generateId("SESSION"),
-      tokenHash: sessionTokenHash,
-      userId: user.id,
-      expiresAt,
-      absoluteExpiresAt,
-      ipAddress: getClientIP(),
-      userAgent: request.headers.get("User-Agent")?.slice(0, 500) ?? null,
-    });
+    await withD1Retry(() =>
+      db.insert(sessions).values({
+        id: generateId("SESSION"),
+        tokenHash: sessionTokenHash,
+        userId: user.id,
+        expiresAt,
+        absoluteExpiresAt,
+        ipAddress: getClientIP(),
+        userAgent: request.headers.get("User-Agent")?.slice(0, 500) ?? null,
+      }),
+    );
 
     await enforceSessionCap(db, user.id);
     await rememberDevice(db, env, user.id).catch(() => {});
@@ -293,6 +293,10 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
 
   appendCookies([
     createCookieString("session", "", 0, {
+      appUrl: env.APP_URL,
+      environment: env.ENVIRONMENT,
+    }),
+    createCookieString("ossmeet_device", "", 0, {
       appUrl: env.APP_URL,
       environment: env.ENVIRONMENT,
     }),

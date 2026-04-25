@@ -1,13 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createJsonLdScript, createPageHead, buildWebPageGraph } from "@/lib/seo";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({
-    meta: [
-      { title: "Privacy Policy — OSSMeet" },
-      { name: "description", content: "Read the OSSMeet privacy policy to understand how we collect, use, and protect your data." },
-      { property: "og:title", content: "Privacy Policy — OSSMeet" },
-      { property: "og:url", content: "https://ossmeet.com/privacy" },
-    ],
-    links: [{ rel: "canonical", href: "https://ossmeet.com/privacy" }],
-  }),
+  head: () =>
+    createPageHead({
+      title: "Privacy Policy — OSSMeet",
+      description:
+        "Read the OSSMeet privacy policy to understand how we collect, use, and protect account, meeting, and whiteboard data.",
+      path: "/privacy",
+      scripts: [
+        createJsonLdScript(
+          buildWebPageGraph({
+            title: "Privacy Policy — OSSMeet",
+            description:
+              "Read the OSSMeet privacy policy to understand how we collect, use, and protect account, meeting, and whiteboard data.",
+            path: "/privacy",
+          }),
+        ),
+      ],
+    }),
 });

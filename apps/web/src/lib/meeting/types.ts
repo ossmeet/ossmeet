@@ -23,6 +23,7 @@ export interface JoinResult {
   turnServers: Array<{ urls: string[]; username: string; credential: string }>;
   expiresIn: number;
   whiteboardEnabled?: boolean;
+  whiteboardDisabledReason?: string | null;
   whiteboardToken?: string | null;
   whiteboardUrl?: string | null;
   recordingEnabled?: boolean;

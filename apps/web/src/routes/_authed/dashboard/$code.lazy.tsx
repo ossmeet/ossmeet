@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { generateMeetingNotes } from "@/server/transcripts/generate-notes";
 import { meetingSummaryQueryOptions, meetingTranscriptsQueryOptions } from "@/queries/meeting-recap";
+import { queryKeys } from "@/lib/query-keys";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -128,7 +129,7 @@ function RoomDashboardPage() {
         setGenerationError(result.error as GenerationError);
         return;
       }
-      queryClient.invalidateQueries({ queryKey: ["rooms", code, "summary"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.rooms.summary(code) });
     },
     onError: () => {
       setGenerationError("llm_failed");

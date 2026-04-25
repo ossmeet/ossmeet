@@ -9,6 +9,7 @@ import {
 type AudioCancellationStatus = "native" | "starting" | "active" | "fallback" | "unsupported";
 
 interface UseAudioCancellationReturn {
+  canToggleNoiseFilter: boolean;
   isNoiseFilterEnabled: boolean;
   isNoiseFilterPending: boolean;
   status: AudioCancellationStatus;
@@ -39,7 +40,6 @@ async function applyNativeConstraints(track: LocalAudioTrack | null, suppress: b
 }
 
 export function useAudioCancellation(room: Room | undefined, isMicOn: boolean): UseAudioCancellationReturn {
-  const [enabled, setEnabled] = React.useState(true);
   const [trackRevision, setTrackRevision] = React.useState(0);
 
   React.useEffect(() => {
@@ -57,19 +57,22 @@ export function useAudioCancellation(room: Room | undefined, isMicOn: boolean): 
   React.useEffect(() => {
     if (!room || !isMicOn) return;
     const track = getMicrophoneTrack(room);
-    void applyNativeConstraints(track, enabled).catch(() => {});
-  }, [room, isMicOn, enabled, trackRevision]);
+    void applyNativeConstraints(track, true).catch(() => {});
+  }, [room, isMicOn, trackRevision]);
+
+  const [isNoiseFilterEnabled, setIsNoiseFilterEnabled] = React.useState(true);
 
   const setNoiseFilterEnabled = React.useCallback(async (value: boolean) => {
-    setEnabled(value);
     const track = getMicrophoneTrack(room);
     await applyNativeConstraints(track, value).catch(() => {});
+    setIsNoiseFilterEnabled(value);
   }, [room]);
 
   return {
-    isNoiseFilterEnabled: enabled,
+    canToggleNoiseFilter: true,
+    isNoiseFilterEnabled,
     isNoiseFilterPending: false,
-    status: enabled ? "active" : "native",
+    status: "native",
     lastError: null,
     setNoiseFilterEnabled,
   };

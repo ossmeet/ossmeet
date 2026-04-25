@@ -10,7 +10,7 @@ import type { JoinResult } from "@/lib/meeting/types";
 import { createLiveKitAccess } from "@/lib/meeting/livekit-token.server";
 import { createWhiteboardJWT } from "@/lib/jwt-utils";
 import { logError } from "@/lib/logger";
-import { terminateMeetingRoom } from "./leave-end";
+import { terminateMeetingRoom } from "./leave-end.server";
 import { finalizeSessionByMeetingId } from "./session-finalizer";
 
 export function getMeetingRolePublishSources(
@@ -54,6 +54,18 @@ interface IssueMeetingAccessParams {
   recordingEnabled: boolean;
 }
 
+function getWhiteboardAvailability(
+  env: Pick<Env, "WHITEBOARD_URL" | "WHITEBOARD_JWT_SECRET">
+): { enabled: boolean; disabledReason: string | null } {
+  if (!env.WHITEBOARD_URL?.trim()) {
+    return { enabled: false, disabledReason: "Whiteboard server is not configured." };
+  }
+  if (!env.WHITEBOARD_JWT_SECRET?.trim()) {
+    return { enabled: false, disabledReason: "Whiteboard authentication is not configured." };
+  }
+  return { enabled: true, disabledReason: null };
+}
+
 export async function issueMeetingAccess({
   env,
   meeting,
@@ -65,7 +77,8 @@ export async function issueMeetingAccess({
   recordingEnabled,
 }: IssueMeetingAccessParams): Promise<JoinResult> {
   const roomName = `meet-${meeting.id}`;
-  const whiteboardConfigured = Boolean(env.WHITEBOARD_URL && env.WHITEBOARD_JWT_SECRET);
+  const whiteboardAvailability = getWhiteboardAvailability(env);
+  const whiteboardConfigured = whiteboardAvailability.enabled;
   const whiteboardRole =
     participantRole === "host" ? "host" : participantRole === "participant" ? "participant" : "guest";
   const [{ token, turnServers, expiresIn }, whiteboardToken] = await Promise.all([
@@ -103,6 +116,7 @@ export async function issueMeetingAccess({
     turnServers,
     expiresIn,
     whiteboardEnabled: whiteboardConfigured,
+    whiteboardDisabledReason: whiteboardAvailability.disabledReason,
     whiteboardToken,
     whiteboardUrl: whiteboardConfigured ? env.WHITEBOARD_URL : null,
     recordingEnabled,

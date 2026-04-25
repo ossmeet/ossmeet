@@ -238,28 +238,35 @@ export const joinMeeting = createServerFn({ method: "POST" })
     const guestSecretHash = guestSecretRaw ? await hashSessionToken(guestSecretRaw) : null;
     const now = new Date();
 
-    const activeAtInsertTime = await db.query.meetingSessions.findFirst({
-      where: and(eq(meetingSessions.id, meeting.id), eq(meetingSessions.status, "active")),
-      columns: { id: true },
-    });
-    if (!activeAtInsertTime) throw Errors.NOT_FOUND("Meeting");
-
     const needsApproval = meeting.requireApproval && !isHost;
     const initialStatus = needsApproval ? "awaiting_approval" : "pending";
 
-    await withD1Retry(() =>
-      db.insert(meetingParticipants).values({
-        id: mpId,
-        sessionId: meeting.id,
-        userId: user?.id ?? null,
-        displayName,
-        role: isHost ? "host" : user ? "participant" : "guest",
-        status: initialStatus,
-        livekitIdentity,
-        guestSecret: guestSecretHash,
-        joinedAt: now,
-      }),
+    // Batch the meeting-still-active check with the participant insert to reduce
+    // a round trip. D1 batch runs statements in a single implicit transaction.
+    const [activeCheck] = await withD1Retry(() =>
+      db.batch([
+        db
+          .select({ id: meetingSessions.id })
+          .from(meetingSessions)
+          .where(and(eq(meetingSessions.id, meeting.id), eq(meetingSessions.status, "active"))),
+        db.insert(meetingParticipants).values({
+          id: mpId,
+          sessionId: meeting.id,
+          userId: user?.id ?? null,
+          displayName,
+          role: isHost ? "host" : user ? "participant" : "guest",
+          status: initialStatus,
+          livekitIdentity,
+          guestSecret: guestSecretHash,
+          joinedAt: now,
+        }),
+      ]),
     );
+    if (activeCheck.length === 0) {
+      // Meeting ended between our initial check and insert — clean up the orphan row.
+      await withD1Retry(() => db.delete(meetingParticipants).where(eq(meetingParticipants.id, mpId))).catch(() => undefined);
+      throw Errors.NOT_FOUND("Meeting");
+    }
 
     if (needsApproval) {
       if (guestSecretRaw) {

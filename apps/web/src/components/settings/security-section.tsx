@@ -1,29 +1,26 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Shield, Trash2, KeyRound } from "lucide-react";
 import {
   deletePasskey,
   finishPasskeyRegistration,
-  listPasskeys,
   startPasskeyRegistration,
 } from "@/server/auth";
 import { getErrorMessage } from "@/lib/errors";
-import { queryKeys } from "@/lib/query-keys";
+import { passkeysQueryOptions } from "@/queries/settings";
 import { SettingsSection } from "./settings-section";
 import { Button } from "../ui/button";
 
 export function SecuritySection() {
   const [passkeySupported, setPasskeySupported] = useState(false);
   const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setPasskeySupported(typeof window !== "undefined" && "PublicKeyCredential" in window);
   }, []);
 
-  const passkeysQuery = useQuery({
-    queryKey: queryKeys.passkeys(),
-    queryFn: () => listPasskeys(),
-  });
+  const passkeysQuery = useQuery(passkeysQueryOptions());
 
   const addPasskeyMutation = useMutation({
     mutationFn: async () => {
@@ -34,7 +31,7 @@ export function SecuritySection() {
     },
     onSuccess: async () => {
       setError("");
-      await passkeysQuery.refetch();
+      await queryClient.invalidateQueries({ queryKey: passkeysQueryOptions().queryKey });
     },
     onError: (err) => {
       setError(getErrorMessage(err, "Could not register passkey."));
@@ -45,7 +42,7 @@ export function SecuritySection() {
     mutationFn: (passkeyId: string) => deletePasskey({ data: { passkeyId } }),
     onSuccess: async () => {
       setError("");
-      await passkeysQuery.refetch();
+      await queryClient.invalidateQueries({ queryKey: passkeysQueryOptions().queryKey });
     },
     onError: (err) => {
       setError(getErrorMessage(err, "Could not remove passkey."));

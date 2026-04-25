@@ -614,6 +614,7 @@ function getLegacyBrowserBlockReason(): string | null {
 
 function MeetingRoute() {
   const { code } = Route.useParams();
+  const { lookup } = Route.useLoaderData();
   const navigate = useNavigate();
   const [phase, setPhase] = React.useState<MeetingPhase>("prejoin");
   const [waitingForHost, setWaitingForHost] = React.useState(false);
@@ -650,6 +651,7 @@ function MeetingRoute() {
   // making the user click "Try again" for every flaky-network blip.
   const autoRejoinAttemptedRef = React.useRef(false);
   const meetingEndedExternallyRef = React.useRef<(() => Promise<void>) | null>(null);
+  const lastJoinDisplayNameRef = React.useRef<string | null>(null);
 
   const { data: sessionData } = useQuery(sessionQueryOptions());
   const authenticatedUser = sessionData?.user ? { name: sessionData.user.name } : undefined;
@@ -702,7 +704,7 @@ function MeetingRoute() {
       const orphan = speculativeOrphanRef.current;
       if (!orphan) return;
       speculativeOrphanRef.current = null;
-      notifyMeetingLeave(orphan);
+      notifyMeetingLeave({ ...orphan, finalizeIfEmpty: true });
     };
     window.addEventListener("pagehide", cleanupSpeculative);
     return () => {
@@ -758,6 +760,7 @@ function MeetingRoute() {
         return;
       }
 
+      lastJoinDisplayNameRef.current = result.participantName;
       // Persist guest participant identity across tab closes/restarts.
       persistReconnectParticipantId(
         code,
@@ -1016,6 +1019,7 @@ function MeetingRoute() {
       setError(null);
       setPhase("connecting");
       const displayName =
+        lastJoinDisplayNameRef.current ||
         localStorage.getItem("ossmeet.user.name") ||
         authenticatedUser?.name ||
         "Guest";
@@ -1065,7 +1069,12 @@ function MeetingRoute() {
   if (phase === "prejoin") {
     return (
       <div className="relative w-full" style={{ background: '#f2f0ec' }}>
-        <PreJoinScreen onJoin={handlePreJoin} waitingForHost={waitingForHost} user={authenticatedUser} />
+        <PreJoinScreen
+          onJoin={handlePreJoin}
+          waitingForHost={waitingForHost}
+          noActiveSession={lookup.kind === "permanent" && !lookup.hasActiveSession}
+          user={authenticatedUser}
+        />
       </div>
     );
   }
@@ -2069,6 +2078,7 @@ function MeetingRoomContent({
 
   // ── Audio cancellation ──
   const {
+    canToggleNoiseFilter,
     setNoiseFilterEnabled,
     isNoiseFilterEnabled,
     isNoiseFilterPending,
@@ -2194,9 +2204,13 @@ function MeetingRoomContent({
   const whiteboardReady = whiteboardRequested && whiteboardViewState === "ready";
   const whiteboardLoading = whiteboardRequested && whiteboardViewState === "loading";
   const whiteboardError = whiteboardRequested && whiteboardViewState === "error";
+  const whiteboardDisabledByConfig = whiteboardRequested && !joinResult.whiteboardEnabled;
   const showScreenShareStage = hasScreenShare;
   const showWhiteboardCanvas = whiteboardReady && !showScreenShareStage;
   const showBottomRequestTray = canModerate && hostPermissionRequests.length > 0 && whiteboardRequested;
+  const desktopPanelRightOffsetClass = showVideoSidebar
+    ? "right-[calc(200px+0.75rem)] lg:right-[calc(240px+0.75rem)]"
+    : "right-3";
   const handleAddWikiImageToWhiteboard = React.useCallback(async (imageUrl: string) => {
     if (!whiteboardRef.current) {
       throw new Error("Open the whiteboard first");
@@ -2319,7 +2333,7 @@ function MeetingRoomContent({
                     ? `calc(env(safe-area-inset-top, 0px) + 120px)`
                     : undefined,
                   paddingBottom: isNarrow
-                    ? "calc(env(safe-area-inset-bottom, 0px) + 104px)"
+                    ? "calc(env(safe-area-inset-bottom, 0px) + 144px)"
                     : "env(safe-area-inset-bottom, 0px)",
                 }}
               >
@@ -2401,10 +2415,28 @@ function MeetingRoomContent({
               )}
             </div>
 
-            {!showScreenShareStage && (whiteboardLoading || whiteboardError) && (
+            {!showScreenShareStage && (whiteboardLoading || whiteboardError || whiteboardDisabledByConfig) && (
               <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: "rgba(245, 244, 242, 0.95)", backdropFilter: "blur(24px)" }}>
                 <div className="liquid-glass-soft mx-6 w-full max-w-sm rounded-3xl p-8 text-center">
-                  {whiteboardError ? (
+                  {whiteboardDisabledByConfig ? (
+                    <>
+                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3z" />
+                        </svg>
+                      </div>
+                      <p className="text-base font-semibold text-stone-800">Whiteboard unavailable</p>
+                      <p className="mt-2 text-sm text-stone-500">
+                        {joinResult.whiteboardDisabledReason || "Continuing without the shared canvas."}
+                      </p>
+                      <button
+                        onClick={() => { void closeWhiteboard(); }}
+                        className="mt-5 rounded-xl px-5 py-2.5 text-sm font-medium text-stone-700 transition-all hover:bg-stone-200 bg-stone-100"
+                      >
+                        Continue meeting
+                      </button>
+                    </>
+                  ) : whiteboardError ? (
                     <>
                       <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
                         <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2551,6 +2583,7 @@ function MeetingRoomContent({
               unreadCount={ui.chatUnreadCount}
               isHandRaised={isHandRaised}
               whiteboardDisabled={!joinResult?.whiteboardEnabled}
+              whiteboardDisabledReason={joinResult?.whiteboardDisabledReason}
               recordingDisabled={!joinResult?.recordingEnabled || !canModerate || recordingPending}
               onToggleMic={() => {
                 const lp = roomInstance?.localParticipant;
@@ -2585,16 +2618,20 @@ function MeetingRoomContent({
               onLeave={canModerate ? handleEnd : handleLeave}
               isNoiseFilterEnabled={isNoiseFilterEnabled}
               isNoiseFilterPending={isNoiseFilterPending}
-              onToggleNoiseFilter={() => {
-                const enabling = !isNoiseFilterEnabled;
-                setNoiseFilterEnabled(enabling).catch((err) => {
-                  addToast({
-                    title: "Noise filter failed",
-                    description: err instanceof Error ? err.message : "Could not update the noise filter.",
-                    data: { variant: "error" },
-                  });
-                });
-              }}
+              onToggleNoiseFilter={
+                canToggleNoiseFilter
+                  ? () => {
+                      const enabling = !isNoiseFilterEnabled;
+                      setNoiseFilterEnabled(enabling).catch((err) => {
+                        addToast({
+                          title: "Noise filter failed",
+                          description: err instanceof Error ? err.message : "Could not update the noise filter.",
+                          data: { variant: "error" },
+                        });
+                      });
+                    }
+                  : undefined
+              }
               backgroundMode={bgEffect.mode}
               backgroundImagePath={bgEffect.imagePath}
               backgroundSupported={bgEffect.isSupported}
@@ -2745,7 +2782,7 @@ function MeetingRoomContent({
       ) : (
         <>
           {ui.showParticipants && (
-            <div className="absolute right-3 top-13 bottom-3 z-[100]">
+            <div className={cn("absolute top-13 bottom-3 z-[100]", desktopPanelRightOffsetClass)}>
               <SuspenseBoundary>
                 <LazyModernParticipantsPanel
                   participants={participantsList}
@@ -2756,7 +2793,7 @@ function MeetingRoomContent({
             </div>
           )}
           {ui.showChat && (
-            <div className="absolute right-3 top-13 bottom-3 z-[100]">
+            <div className={cn("absolute top-13 bottom-3 z-[100]", desktopPanelRightOffsetClass)}>
               <SuspenseBoundary>
                 <LazyModernLiveChat
                   messages={chatMessages}
@@ -2769,7 +2806,7 @@ function MeetingRoomContent({
             </div>
           )}
           {canModerate && ui.showHandQueue && (
-            <div className="absolute right-3 top-13 bottom-3 z-[100]">
+            <div className={cn("absolute top-13 bottom-3 z-[100]", desktopPanelRightOffsetClass)}>
               <SuspenseBoundary>
                 <LazyHandRaisePanel
                   queue={handRaiseQueue}
@@ -2781,7 +2818,7 @@ function MeetingRoomContent({
             </div>
           )}
           {!showWhiteboard && ui.showSearch && (
-            <div className="absolute right-3 top-14 z-[100]">
+            <div className={cn("absolute top-14 z-[100]", desktopPanelRightOffsetClass)}>
               <SuspenseBoundary>
                 <LazyWikiSearchPanel
                   onClose={() => ui.setShowSearch(false)}

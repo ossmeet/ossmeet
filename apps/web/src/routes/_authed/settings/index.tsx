@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authed/settings/")({
   }),
   loader: ({ context }) =>
     Promise.all([
-      context.queryClient.ensureQueryData(sessionsListQueryOptions()),
-      context.queryClient.ensureQueryData(linkedAccountsQueryOptions()),
+      context.queryClient.prefetchQuery(sessionsListQueryOptions()),
+      context.queryClient.prefetchQuery(linkedAccountsQueryOptions()),
     ]),
 });

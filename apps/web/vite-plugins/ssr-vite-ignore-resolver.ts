@@ -22,8 +22,8 @@ export function ssrViteIgnoreResolver(): Plugin {
   return {
     name: "ssr-vite-ignore-resolver",
     enforce: "pre",
-    transform(code, _id, options) {
-      if (!options?.ssr) return null;
+    transform(code) {
+      if (this.environment.config.consumer !== "server") return null;
       if (!code.includes("@vite-ignore")) return null;
 
       // Collect const MODULE declarations: const VARNAME = "path/string";
@@ -51,7 +51,7 @@ export function ssrViteIgnoreResolver(): Plugin {
         }
       }
 
-      return changed ? result : null;
+      return changed ? { code: result, map: null } : null;
     },
   };
 }

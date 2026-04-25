@@ -1,24 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { meetingArtifacts, rooms, meetingSessions, meetingParticipants } from "@ossmeet/db/schema";
+import { meetingArtifacts, rooms, meetingSessions } from "@ossmeet/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { Errors } from "@ossmeet/shared";
 import { authMiddleware } from "../middleware";
 import { buildR2Client } from "../upload";
+import { canAccessMeetingTranscriptData } from "../transcripts/access";
 
-async function assertParticipant(
+async function assertExportAccess(
   db: import("@ossmeet/db").Database,
   meetingId: string,
   userId: string,
 ) {
-  const row = await db.query.meetingParticipants.findFirst({
-    where: and(
-      eq(meetingParticipants.sessionId, meetingId),
-      eq(meetingParticipants.userId, userId),
-    ),
-  });
-  if (!row) throw Errors.FORBIDDEN();
-  return row;
+  const allowed = await canAccessMeetingTranscriptData(db, meetingId, userId);
+  if (!allowed) throw Errors.FORBIDDEN();
 }
 
 // ─── getWhiteboardSnapshot ────────────────────────────────────────────
@@ -29,7 +24,7 @@ export const getWhiteboardSnapshot = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .inputValidator(z.object({ sessionId: z.string().min(1) }))
   .handler(async ({ data, context: { user, db, env } }) => {
-    await assertParticipant(db, data.sessionId, user.id);
+    await assertExportAccess(db, data.sessionId, user.id);
 
     const snapshotArtifact = await db.query.meetingArtifacts.findFirst({
       where: and(
@@ -58,7 +53,7 @@ export const getWhiteboardPdfDownloadUrl = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .inputValidator(z.object({ sessionId: z.string().min(1) }))
   .handler(async ({ data, context: { user, db, env } }) => {
-    await assertParticipant(db, data.sessionId, user.id);
+    await assertExportAccess(db, data.sessionId, user.id);
 
     const artifact = await db.query.meetingArtifacts.findFirst({
       where: and(

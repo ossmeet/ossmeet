@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { createDb } from "@ossmeet/db";
 import { meetingArtifacts, meetingSessions, spaces, users, spaceAssets } from "@ossmeet/db/schema";
-import { and, desc, eq, isNull, lt } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
 import {
   Errors,
   getAssetUrlSchema,
@@ -53,6 +53,7 @@ export const listSpaceAssets = createServerFn({ method: "GET" })
     await assertSpaceMembership(db, data.spaceId, user.id);
 
     let cursorCreatedAt: Date | null = null;
+    let cursorId: string | null = null;
     if (data.cursor) {
       const [spaceAsset, meetingArtifact] = await Promise.all([
         db.query.spaceAssets.findFirst({
@@ -68,13 +69,23 @@ export const listSpaceAssets = createServerFn({ method: "GET" })
         }),
       ]);
       cursorCreatedAt = spaceAsset?.createdAt ?? meetingArtifact?.createdAt ?? null;
+      cursorId = cursorCreatedAt ? data.cursor : null;
+      if (!cursorCreatedAt || !cursorId) {
+        throw Errors.VALIDATION("Invalid asset cursor");
+      }
     }
 
     const limit = data.limit;
     const [spaceRows, meetingRows] = await Promise.all([
       db.query.spaceAssets.findMany({
         where: cursorCreatedAt
-          ? and(eq(spaceAssets.spaceId, data.spaceId), lt(spaceAssets.createdAt, cursorCreatedAt))
+          ? and(
+              eq(spaceAssets.spaceId, data.spaceId),
+              or(
+                lt(spaceAssets.createdAt, cursorCreatedAt),
+                and(eq(spaceAssets.createdAt, cursorCreatedAt), lt(spaceAssets.id, cursorId!)),
+              ),
+            )
           : eq(spaceAssets.spaceId, data.spaceId),
         orderBy: (table) => [desc(table.createdAt), desc(table.id)],
         limit: limit + 1,
@@ -83,7 +94,10 @@ export const listSpaceAssets = createServerFn({ method: "GET" })
         where: cursorCreatedAt
           ? and(
               eq(meetingArtifacts.spaceId, data.spaceId),
-              lt(meetingArtifacts.createdAt, cursorCreatedAt),
+              or(
+                lt(meetingArtifacts.createdAt, cursorCreatedAt),
+                and(eq(meetingArtifacts.createdAt, cursorCreatedAt), lt(meetingArtifacts.id, cursorId!)),
+              ),
             )
           : eq(meetingArtifacts.spaceId, data.spaceId),
         orderBy: (table) => [desc(table.createdAt), desc(table.id)],

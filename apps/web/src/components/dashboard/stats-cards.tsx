@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 import {
   BarChart3,
   Globe,
@@ -21,15 +21,15 @@ interface StatsCardsProps {
   compact?: boolean;
 }
 
-export function StatsCards({ compact = false }: StatsCardsProps) {
-  const { data: activeSpacesCount } = useSuspenseQuery({
-    ...mySpacesQueryOptions(),
-    select: (data) => data?.spaces?.length ?? 0,
-  });
+const selectSpacesCount = (data: { spaces?: unknown[] } | undefined) => data?.spaces?.length ?? 0;
+const selectMeetingCount = (data: { meetings?: unknown[] } | undefined) => data?.meetings?.length ?? 0;
 
-  const { data: meetingCount } = useSuspenseQuery({
-    ...myRecentMeetingsQueryOptions(),
-    select: (data) => data?.meetings?.length ?? 0,
+export function StatsCards({ compact = false }: StatsCardsProps) {
+  const [{ data: activeSpacesCount }, { data: meetingCount }] = useSuspenseQueries({
+    queries: [
+      { ...mySpacesQueryOptions(), select: selectSpacesCount },
+      { ...myRecentMeetingsQueryOptions(), select: selectMeetingCount },
+    ],
   });
 
   const stats: StatConfig[] = [

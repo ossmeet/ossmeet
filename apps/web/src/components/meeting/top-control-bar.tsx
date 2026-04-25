@@ -68,6 +68,7 @@ interface TopControlBarProps {
   captionCountry?: string | null;
   onSelectCaptionLanguage?: (lang: string) => void;
   whiteboardDisabled?: boolean;
+  whiteboardDisabledReason?: string | null;
   showRecordingControl?: boolean;
   recordingDisabled?: boolean;
   isNoiseFilterEnabled?: boolean;
@@ -249,14 +250,15 @@ function CaptionButton({
           <PopoverContent
             side="bottom"
             align="end"
-            className="w-80 rounded-2xl bg-warm-50/98 p-3 shadow-2xl ring-1 ring-warm-200/80 backdrop-blur-xl"
+            className="w-80 rounded-2xl border border-stone-200 bg-white p-3 text-stone-900 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.3)]"
           >
-            <div className="mb-2 text-sm font-medium text-warm-700">Caption language</div>
+            <div className="mb-2 text-sm font-medium text-stone-900">Caption language</div>
             <CaptionLanguagePicker
               country={captionCountry}
               selectedLanguage={captionLanguageTag ?? "en-US"}
               onSelectLanguage={(lang) => { onSelectCaptionLanguage(lang); setOpen(false); }}
               autoFocusSearch
+              variant="light"
             />
             <button
               onClick={() => { onToggleCaptions(); setOpen(false); }}
@@ -453,6 +455,7 @@ export function TopControlBar({
   isHandRaised = false,
   showCaptions = false,
   whiteboardDisabled = false,
+  whiteboardDisabledReason = null,
   showRecordingControl = true,
   recordingDisabled = false,
   onToggleMic,
@@ -668,7 +671,13 @@ export function TopControlBar({
       <div className="flex items-center gap-0.5 pl-2">
         <BarButton
           icon={SquarePen}
-          label={whiteboardDisabled ? "Whiteboard unavailable" : showWhiteboard ? "Close whiteboard" : "Open whiteboard"}
+          label={
+            whiteboardDisabled
+              ? whiteboardDisabledReason || "Whiteboard unavailable"
+              : showWhiteboard
+                ? "Close whiteboard"
+                : "Open whiteboard"
+          }
           active={showWhiteboard}
           disabled={whiteboardDisabled}
           onClick={onToggleWhiteboard}

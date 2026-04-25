@@ -14,8 +14,8 @@ export const Route = createFileRoute("/_authed/spaces/$spaceId")({
   },
   loader: async ({ context, params }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(spaceQueryOptions(params.spaceId)),
-      context.queryClient.ensureQueryData(spaceAssetsQueryOptions(params.spaceId)),
+      context.queryClient.prefetchQuery(spaceQueryOptions(params.spaceId)),
+      context.queryClient.prefetchQuery(spaceAssetsQueryOptions(params.spaceId)),
     ]);
   },
 });

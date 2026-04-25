@@ -42,7 +42,7 @@ describe("meeting access helpers", () => {
         LIVEKIT_API_SECRET: "secret",
         WHITEBOARD_URL: "https://whiteboard.ossmeet.com",
         WHITEBOARD_JWT_SECRET: "whiteboard-secret",
-      } as Env,
+      } as unknown as Env,
       meeting: {
         id: "mtg_123",
         title: "Design Review",
@@ -85,6 +85,7 @@ describe("meeting access helpers", () => {
       turnServers: [],
       expiresIn: 600,
       whiteboardEnabled: true,
+      whiteboardDisabledReason: null,
       whiteboardToken: expect.any(String),
       whiteboardUrl: "https://whiteboard.ossmeet.com",
       recordingEnabled: true,
@@ -103,7 +104,7 @@ describe("meeting access helpers", () => {
         LIVEKIT_API_SECRET: "secret",
         WHITEBOARD_URL: "https://whiteboard.ossmeet.com",
         WHITEBOARD_JWT_SECRET: "",
-      } as Env,
+      } as unknown as Env,
       meeting: {
         id: "mtg_456",
         title: "No Whiteboard Secret",
@@ -119,6 +120,7 @@ describe("meeting access helpers", () => {
     });
 
     expect(result.whiteboardEnabled).toBe(false);
+    expect(result.whiteboardDisabledReason).toBe("Whiteboard authentication is not configured.");
     expect(result.whiteboardToken).toBeNull();
     expect(result.whiteboardUrl).toBeNull();
   });

@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { listSessions } from "@/server/auth";
+import { listSessions, listPasskeys } from "@/server/auth";
 import { getLinkedAccounts } from "@/server/auth/oauth-google";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -15,6 +15,14 @@ export const linkedAccountsQueryOptions = () =>
   queryOptions({
     queryKey: queryKeys.linkedAccounts(),
     queryFn: () => getLinkedAccounts(),
-    staleTime: 1000 * 60, // 1 min — linked accounts rarely change
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 5,
+  });
+
+export const passkeysQueryOptions = () =>
+  queryOptions({
+    queryKey: queryKeys.passkeys(),
+    queryFn: () => listPasskeys(),
+    staleTime: 30 * 1000,
     gcTime: 1000 * 60 * 5,
   });

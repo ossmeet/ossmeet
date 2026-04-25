@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 import { myRecentMeetingsQueryOptions } from "@/queries/meetings";
 import { mySpacesQueryOptions } from "@/queries/spaces";
 import { TrendingUp, TrendingDown, Clock, Calendar, Users, Sparkles } from "lucide-react";
@@ -56,8 +56,9 @@ function calculateWeeklyStats(meetingSessions: Array<{ startedAt: string | null;
 }
 
 export function MeetingInsights() {
-  const { data: meetingsData } = useSuspenseQuery(myRecentMeetingsQueryOptions());
-  const { data: spacesData } = useSuspenseQuery(mySpacesQueryOptions());
+  const [{ data: meetingsData }, { data: spacesData }] = useSuspenseQueries({
+    queries: [myRecentMeetingsQueryOptions(), mySpacesQueryOptions()],
+  });
 
   const meetingSessions = meetingsData?.meetings ?? [];
   const spaces = spacesData?.spaces ?? [];

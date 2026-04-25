@@ -5,13 +5,13 @@ import { toggleRecordingSchema, Errors, getPlanLimits } from "@ossmeet/shared";
 import type { PlanType } from "@ossmeet/shared";
 import { z } from "zod";
 import { authMiddleware } from "../middleware";
-import { startRecordingTask, stopRecordingTask } from "./recording-tasks";
+import { startRecordingTask, stopRecordingTask } from "./recording-tasks.server";
 
 const getRecordingStatusSchema = z.object({
   sessionId: z.string().min(1),
 });
 
-export const getRecordingStatus = createServerFn({ method: "POST" })
+export const getRecordingStatus = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .inputValidator(getRecordingStatusSchema)
   .handler(async ({ data, context: { user, db } }) => {

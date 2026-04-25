@@ -22,9 +22,10 @@ import {
   enforceIpRateLimit,
   appendCookies,
 } from "./helpers";
+import { withD1Retry } from "@/lib/db-utils";
 import { authMiddleware } from "../middleware";
 import { finalizeMeetingsEnd } from "../meetings/finalize";
-import { terminateMeetingRoom } from "../meetings/leave-end";
+import { terminateMeetingRoom } from "../meetings/leave-end.server";
 import { verifyOtpWithAttempts } from "./signup";
 
 const ROOM_ACTIVE_LOOKUP_CHUNK_SIZE = d1MaxItemsPerStatement(1, 1);
@@ -45,10 +46,12 @@ export const updateProfile = createServerFn({ method: "POST" })
   .inputValidator(updateProfileSchema)
   .handler(async ({ data, context: { user, env: _env, db } }) => {
 
-    await db
-      .update(users)
-      .set({ name: data.name.trim(), updatedAt: new Date() })
-      .where(eq(users.id, user.id));
+    await withD1Retry(() =>
+      db
+        .update(users)
+        .set({ name: data.name.trim(), updatedAt: new Date() })
+        .where(eq(users.id, user.id)),
+    );
 
     return { success: true, name: data.name.trim() };
   });
@@ -121,7 +124,9 @@ export const revokeSession = createServerFn({ method: "POST" })
     const isCurrentSession = currentTokenHashes.includes(session.tokenHash);
 
     // Delete the session
-    await db.delete(sessions).where(eq(sessions.id, data.sessionId));
+    await withD1Retry(() =>
+      db.delete(sessions).where(eq(sessions.id, data.sessionId)),
+    );
 
     // If revoking current session, clear the cookie
     if (isCurrentSession) {
@@ -346,7 +351,7 @@ export const deleteAccount = createServerFn({ method: "POST" })
     // Asset rows linked to this user may not cascade on uploadedById,
     // so we delete R2 objects and their DB records explicitly.
     try {
-      const [uploadedAssets, meetingGeneratedAssets] = await Promise.all([
+      const [uploadedAssets, meetingGeneratedAssets] = await db.batch([
         db
           .select({ id: spaceAssets.id, r2Key: spaceAssets.r2Key })
           .from(spaceAssets)

@@ -14,17 +14,6 @@ export const queryKeys = {
     summary: (code: string) => ["rooms", code, "summary"] as const,
     transcripts: (code: string) => ["rooms", code, "transcripts"] as const,
   },
-  // Temporary compatibility while components are renamed from meetings -> rooms/sessions.
-  meetings: {
-    all: () => ["rooms"] as const,
-    recent: () => ["rooms", "recent-sessions"] as const,
-    active: () => ["rooms", "active-sessions"] as const,
-    links: () => ["rooms", "permanent"] as const,
-    detail: (id: string) => ["sessions", id] as const,
-    byCode: (code: string) => ["rooms", code] as const,
-    summary: (id: string) => ["sessions", id, "summary"] as const,
-    transcripts: (id: string) => ["sessions", id, "transcripts"] as const,
-  },
   spaces: {
     all: () => ["spaces"] as const,
     detail: (id: string) => ["spaces", id] as const,

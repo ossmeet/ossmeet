@@ -43,6 +43,8 @@ import {
 export interface PreJoinScreenProps {
   meetingTitle?: string;
   waitingForHost?: boolean;
+  /** True for permanent rooms that have no active session yet. */
+  noActiveSession?: boolean;
   /** Authenticated user — name is pre-filled and locked (non-editable). */
   user?: { name: string };
   onJoin: (
@@ -167,7 +169,7 @@ function cachedToMediaDeviceInfo(d: CachedDevice): MediaDeviceInfo {
   return { ...d, toJSON: () => d } as unknown as MediaDeviceInfo;
 }
 
-export function PreJoinScreen({ meetingTitle, waitingForHost = false, user, onJoin }: PreJoinScreenProps) {
+export function PreJoinScreen({ meetingTitle, waitingForHost = false, noActiveSession = false, user, onJoin }: PreJoinScreenProps) {
   const prefs = React.useMemo(() => loadPreferences(), []);
   const deviceCache = React.useMemo(() => loadDeviceCache(), []);
   const speechSupported = React.useMemo(() => isSpeechRecognitionSupported(), []);
@@ -273,6 +275,8 @@ export function PreJoinScreen({ meetingTitle, waitingForHost = false, user, onJo
     if (typeof window === "undefined") return "";
     return window.localStorage.getItem("ossmeet.user.name") || "";
   });
+  const [nameError, setNameError] = React.useState<string | null>(null);
+  const nameInputRef = React.useRef<HTMLInputElement>(null);
 
   const [videoDevices, setVideoDevices] = React.useState<MediaDeviceInfo[]>(
     () => deviceCache?.video.map(cachedToMediaDeviceInfo) ?? []
@@ -738,6 +742,12 @@ export function PreJoinScreen({ meetingTitle, waitingForHost = false, user, onJo
   };
 
   const handleJoin = () => {
+    if (!user && !displayName.trim()) {
+      setNameError("Please enter your name to join");
+      nameInputRef.current?.focus();
+      return;
+    }
+
     if (localVideoTrack) {
       void cleanupBackgroundProcessor(localVideoTrack);
       localVideoTrack.stop();
@@ -949,14 +959,28 @@ export function PreJoinScreen({ meetingTitle, waitingForHost = false, user, onJo
                     <span className="text-sm font-medium text-stone-900">{user.name}</span>
                   </div>
                 ) : (
-                    <input
-                      type="text"
-                      maxLength={100}
-                      placeholder="Enter your name"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-900 placeholder-stone-400 transition-all focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-                    />
+                    <>
+                      <input
+                        ref={nameInputRef}
+                        type="text"
+                        maxLength={100}
+                        placeholder="Enter your name"
+                        value={displayName}
+                        onChange={(e) => {
+                          setDisplayName(e.target.value);
+                          if (nameError) setNameError(null);
+                        }}
+                        className={cn(
+                          "h-10 w-full rounded-lg border bg-white px-3 text-sm text-stone-900 placeholder-stone-400 transition-all focus:outline-none focus:ring-2",
+                          nameError
+                            ? "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                            : "border-stone-200 focus:border-teal-500 focus:ring-teal-500/20"
+                        )}
+                      />
+                      {nameError && (
+                        <p className="mt-1 text-xs text-red-500">{nameError}</p>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -1042,29 +1066,36 @@ export function PreJoinScreen({ meetingTitle, waitingForHost = false, user, onJo
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-300 border-t-amber-600" />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-amber-900">Waiting for host</span>
-                      <span className="text-xs text-amber-700">You&apos;ll join automatically</span>
+                      <span className="text-xs text-amber-700">You&apos;ll join automatically when the host starts</span>
                     </div>
                   </div>
                 ) : (
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    disabled={isLoadingDevices || !displayName.trim()}
-                    onClick={handleJoin}
-                    className="h-11 w-full rounded-lg bg-teal-600 text-sm font-semibold text-white transition-all hover:bg-teal-700 disabled:opacity-50"
-                  >
-                    {isLoadingDevices ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Connecting...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <MonitorUp className="h-4 w-4" />
-                        Join meeting
-                      </span>
+                  <>
+                    {noActiveSession && !user && (
+                      <p className="mb-3 text-xs text-stone-500 text-center">
+                        The host hasn&apos;t started this meeting yet. Enter your name and join to wait.
+                      </p>
                     )}
-                  </Button>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      disabled={isLoadingDevices}
+                      onClick={handleJoin}
+                      className="h-11 w-full rounded-lg bg-teal-600 text-sm font-semibold text-white transition-all hover:bg-teal-700 disabled:opacity-50"
+                    >
+                      {isLoadingDevices ? (
+                        <span className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                          Connecting...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <MonitorUp className="h-4 w-4" />
+                          Join meeting
+                        </span>
+                      )}
+                    </Button>
+                  </>
                 )}
               </div>
             </div>

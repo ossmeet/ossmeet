@@ -21,9 +21,8 @@ export const getRouter = () => {
           if (code === "UNAUTHORIZED" || code === "FORBIDDEN" || code === "VALIDATION_ERROR" || code === "NOT_FOUND") {
             return false;
           }
-          return failureCount < 1;
+          return failureCount < 2;
         },
-        refetchOnWindowFocus: false,
       },
     },
   });
@@ -40,6 +39,11 @@ export const getRouter = () => {
     defaultPreloadStaleTime: 0,
     defaultPendingMs: 150,
     defaultPendingMinMs: 100,
+    defaultPendingComponent: () => (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600" />
+      </div>
+    ),
     context: { queryClient },
   });
 

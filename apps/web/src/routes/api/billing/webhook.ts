@@ -78,9 +78,6 @@ async function handlePaddleEvent(
     const status = data["status"] as string | undefined;
     const items = data["items"] as Array<{ price: { id: string } }> | undefined;
     const priceId = items?.[0]?.price?.id;
-    const customDataRaw = data["custom_data"];
-    const userId = (customDataRaw as Record<string, string> | null)?.["userId"];
-
     if (!subscriptionId || !customerId) {
       logWarn("[paddle-webhook] Missing subscriptionId or customerId", { event_type });
       return;
@@ -90,17 +87,12 @@ async function handlePaddleEvent(
     const subscriptionStatus = status ? paddleStatusToSubscriptionStatus(status) : null;
 
     const db = createDb(env.DB);
-
-    // Resolve the user: prefer customData.userId, fall back to paddleCustomerId lookup.
-    let userRow: { id: string } | undefined;
-    if (userId) {
-      userRow = await db.query.users.findFirst({ where: eq(users.id, userId), columns: { id: true } });
-    }
+    const userRow = await db.query.users.findFirst({
+      where: eq(users.paddleCustomerId, customerId),
+      columns: { id: true },
+    });
     if (!userRow) {
-      userRow = await db.query.users.findFirst({ where: eq(users.paddleCustomerId, customerId), columns: { id: true } });
-    }
-    if (!userRow) {
-      logWarn("[paddle-webhook] No user found for subscription", { customerId, userId });
+      logWarn("[paddle-webhook] No user found for subscription", { customerId });
       return;
     }
 
@@ -120,15 +112,36 @@ async function handlePaddleEvent(
     const subscriptionId = data["id"] as string | undefined;
     if (!subscriptionId) return;
 
+    // Paddle fires subscription.canceled at cancel-request time, not at period end.
+    // When canceled with effective_from: "next_billing_period", the subscription
+    // remains active and Paddle will fire subscription.updated with status "canceled"
+    // when it actually expires. Only downgrade immediately for same-day cancellations.
+    const scheduledChange = data["scheduled_change"] as
+      | { action: string; effective_at: string }
+      | null
+      | undefined;
+    const isImmediate = !scheduledChange || scheduledChange.action !== "cancel";
+
     const db = createDb(env.DB);
-    await withD1Retry(() =>
-      db.update(users).set({
-        plan: "free",
-        subscriptionStatus: "canceled",
-        paddleSubscriptionId: null,
-        updatedAt: new Date(),
-      }).where(eq(users.paddleSubscriptionId, subscriptionId))
-    );
+    if (isImmediate) {
+      await withD1Retry(() =>
+        db.update(users).set({
+          plan: "free",
+          subscriptionStatus: "canceled",
+          paddleSubscriptionId: null,
+          updatedAt: new Date(),
+        }).where(eq(users.paddleSubscriptionId, subscriptionId))
+      );
+    } else {
+      // Deferred cancellation — keep plan active until the subscription.updated
+      // webhook fires at period end with status "canceled".
+      await withD1Retry(() =>
+        db.update(users).set({
+          subscriptionStatus: "canceled",
+          updatedAt: new Date(),
+        }).where(eq(users.paddleSubscriptionId, subscriptionId))
+      );
+    }
     return;
   }
 }

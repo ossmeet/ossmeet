@@ -19,6 +19,7 @@ import {
   createValidationError,
 } from "@ossmeet/shared";
 import { eq, and, lt, gte, sql } from "drizzle-orm";
+import { withD1Retry } from "@/lib/db-utils";
 import { sendEmail, buildOtpEmail } from "@/lib/email";
 import {
   getEnv,
@@ -47,16 +48,17 @@ export async function verifyOtpWithAttempts(
 ): Promise<void> {
   const safeVerificationData = sql`CASE WHEN json_valid(${verifications.data}) THEN COALESCE(${verifications.data}, '{}') ELSE '{}' END`;
 
-  await db.update(verifications)
-    .set({
-      data: sql`json_set(${safeVerificationData}, '$._attempts', COALESCE(json_extract(${safeVerificationData}, '$._attempts'), 0) + 1)`,
-      updatedAt: new Date(),
-    })
-    .where(eq(verifications.id, verification.id));
+  const updated = await withD1Retry(() =>
+    db.update(verifications)
+      .set({
+        data: sql`json_set(${safeVerificationData}, '$._attempts', COALESCE(json_extract(${safeVerificationData}, '$._attempts'), 0) + 1)`,
+        updatedAt: new Date(),
+      })
+      .where(eq(verifications.id, verification.id))
+      .returning(),
+  );
 
-  const refreshed = await db.query.verifications.findFirst({
-    where: eq(verifications.id, verification.id),
-  });
+  const refreshed = updated[0];
   if (!refreshed) throw createValidationError("Invalid or expired OTP");
 
   const refreshedData: Record<string, unknown> = refreshed.data

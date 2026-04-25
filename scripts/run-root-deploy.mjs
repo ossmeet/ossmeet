@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
-import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "..");
 const pnpmCmd = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-const whiteboardAvailable = existsSync(resolve(root, "packages/whiteboard/package.json"));
 
 const steps = [
   ["install"],
@@ -14,10 +12,6 @@ const steps = [
   ["--filter", "@ossmeet/web", "build"],
   ["--filter", "@ossmeet/web", "exec", "wrangler", "deploy"],
 ];
-
-if (whiteboardAvailable) {
-  steps.push(["run", "deploy:vps"]);
-}
 
 for (const args of steps) {
   console.log(`[run-root-deploy] pnpm ${args.join(" ")}`);

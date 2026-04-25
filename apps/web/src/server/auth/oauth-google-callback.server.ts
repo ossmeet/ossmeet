@@ -6,6 +6,7 @@ import { hashSessionToken, generateSessionToken } from "@/lib/auth/crypto";
 import { getEnv, getEnvFromRequest, createCookieString, getClientIP, sanitizeUser, enforceIpRateLimit, enforceSessionCap, appendCookies, rememberDevice } from "./helpers";
 import { Errors } from "@ossmeet/shared";
 import { logInfo } from "@/lib/logger";
+import { withD1Retry } from "@/lib/db-utils";
 import { sanitizeDisplayName } from "@/lib/sanitize";
 import { hasOAuthStateHash, removeOAuthStateHash } from "./oauth-state";
 import { exchangeAndVerifyGoogleCode, decryptVerifier } from "./oauth-google";
@@ -163,15 +164,17 @@ export async function handleGoogleCallbackRequest(
   const expiresAt = new Date(oauthNow + SESSION_EXPIRY_MS);
   const absoluteExpiresAt = new Date(oauthNow + SESSION_ABSOLUTE_EXPIRY_MS);
 
-  await db.insert(sessions).values({
-    id: generateId("SESSION"),
-    tokenHash: sessionTokenHash,
-    userId,
-    expiresAt,
-    absoluteExpiresAt,
-    ipAddress: getClientIP(),
-    userAgent: request.headers.get("User-Agent")?.slice(0, 500) ?? null,
-  });
+  await withD1Retry(() =>
+    db.insert(sessions).values({
+      id: generateId("SESSION"),
+      tokenHash: sessionTokenHash,
+      userId,
+      expiresAt,
+      absoluteExpiresAt,
+      ipAddress: getClientIP(),
+      userAgent: request.headers.get("User-Agent")?.slice(0, 500) ?? null,
+    }),
+  );
 
   await enforceSessionCap(db, userId);
   await rememberDevice(db, env, userId).catch(() => {});

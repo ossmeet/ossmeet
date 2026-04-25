@@ -68,10 +68,16 @@ export async function assertActiveMeetingParticipantWithSpaceAccess(
   userId: string,
   { requireSpaceMembership = true }: AssertActiveMeetingParticipantOptions = {},
 ) {
+  // Meeting must be fetched first since participant and space checks depend on it.
   const meeting = await assertMeetingExists(db, meetingId, { requireActive: true });
-  const participant = await assertActiveMeetingParticipant(db, meeting.id, userId);
-  if (requireSpaceMembership) {
-    await assertSpaceMembershipIfNeeded(db, meeting.spaceId, userId);
-  }
+
+  // Participant check and space membership check are independent — run in parallel.
+  const [participant] = await Promise.all([
+    assertActiveMeetingParticipant(db, meeting.id, userId),
+    requireSpaceMembership
+      ? assertSpaceMembershipIfNeeded(db, meeting.spaceId, userId)
+      : null,
+  ]);
+
   return { meeting, participant };
 }

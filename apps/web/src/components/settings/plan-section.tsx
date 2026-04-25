@@ -4,17 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SettingsSection } from "./settings-section";
 import { getPlanLimits, type PlanType } from "@ossmeet/shared";
-
-declare const Paddle: {
-  Initialize: (opts: { token: string }) => void;
-  Checkout: {
-    open: (opts: {
-      items: Array<{ priceId: string; quantity: number }>;
-      customer?: { id?: string; email?: string };
-      customData?: Record<string, string>;
-    }) => void;
-  };
-};
+import { openPaddleCheckout } from "@/lib/paddle-checkout";
 
 function formatDuration(minutes: number | null): string {
   if (minutes === null) return "Unlimited";
@@ -24,31 +14,20 @@ function formatDuration(minutes: number | null): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours} hours`;
 }
 
-async function loadPaddleJs(): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (typeof Paddle !== "undefined") return;
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Paddle.js"));
-    document.head.appendChild(script);
-  });
-}
-
 interface PlanSectionProps {
   plan?: PlanType;
   subscriptionStatus?: "active" | "canceled" | "past_due" | "trialing" | "paused" | null;
-  userId?: string;
 }
 
-export function PlanSection({ plan = "free", subscriptionStatus, userId }: PlanSectionProps) {
+export function PlanSection({ plan = "free", subscriptionStatus }: PlanSectionProps) {
   const limits = getPlanLimits(plan);
   const [loading, setLoading] = React.useState<"pro" | "org" | "portal" | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
   const hasActiveSub = subscriptionStatus === "active" || subscriptionStatus === "trialing";
 
   async function startCheckout(targetPlan: "pro" | "org") {
     setLoading(targetPlan);
+    setError(null);
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
@@ -56,29 +35,19 @@ export function PlanSection({ plan = "free", subscriptionStatus, userId }: PlanS
         body: JSON.stringify({ plan: targetPlan }),
       });
       if (!res.ok) throw new Error(await res.text());
-      const { customerId, priceId } = (await res.json()) as {
+      const { customerId, priceId, email } = (await res.json()) as {
         customerId: string;
         priceId: string;
         email: string;
       };
-
-      await loadPaddleJs();
-
-      const clientToken = (import.meta.env as Record<string, string>).VITE_PADDLE_CLIENT_TOKEN;
-      const environment = (import.meta.env as Record<string, string>).PADDLE_ENVIRONMENT;
-      Paddle.Initialize({ token: clientToken });
-      if (environment === "sandbox") {
-        // @ts-expect-error — Paddle sandbox environment setup
-        Paddle.Environment?.set?.("sandbox");
-      }
-
-      Paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customer: { id: customerId },
-        customData: userId ? { userId } : undefined,
+      await openPaddleCheckout({
+        priceId,
+        customerId,
+        email,
       });
     } catch (err) {
       console.error("Checkout failed:", err);
+      setError("Something went wrong. Please try again or contact support.");
     } finally {
       setLoading(null);
     }
@@ -163,6 +132,7 @@ export function PlanSection({ plan = "free", subscriptionStatus, userId }: PlanS
           )}
         </div>
       )}
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </SettingsSection>
   );
 }

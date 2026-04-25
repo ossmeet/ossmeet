@@ -14,7 +14,7 @@
     "db:migrate:remote": "pnpm --filter @ossmeet/web db:migrate:remote",
     "deploy": "node scripts/run-root-deploy.mjs",
     "deploy:vps": "bash infra/vps/sync.sh",
-    "deploy:all": "pnpm run deploy"
+    "deploy:all": "pnpm run deploy && pnpm run deploy:vps"
   },
   "devDependencies": {
     "typescript": "^6.0.3",

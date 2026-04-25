@@ -1,13 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createJsonLdScript, createPageHead, buildWebPageGraph } from "@/lib/seo";
 
 export const Route = createFileRoute("/terms")({
-  head: () => ({
-    meta: [
-      { title: "Terms of Service — OSSMeet" },
-      { name: "description", content: "Read the OSSMeet terms of service governing your use of our video meeting and whiteboard platform." },
-      { property: "og:title", content: "Terms of Service — OSSMeet" },
-      { property: "og:url", content: "https://ossmeet.com/terms" },
-    ],
-    links: [{ rel: "canonical", href: "https://ossmeet.com/terms" }],
-  }),
+  head: () =>
+    createPageHead({
+      title: "Terms of Service — OSSMeet",
+      description:
+        "Read the OSSMeet terms of service governing use of the video meeting, whiteboard, and account platform.",
+      path: "/terms",
+      scripts: [
+        createJsonLdScript(
+          buildWebPageGraph({
+            title: "Terms of Service — OSSMeet",
+            description:
+              "Read the OSSMeet terms of service governing use of the video meeting, whiteboard, and account platform.",
+            path: "/terms",
+          }),
+        ),
+      ],
+    }),
 });

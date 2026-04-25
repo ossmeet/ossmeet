@@ -37,7 +37,7 @@ export async function registerSpaceAssetMetadata(
 ): Promise<void> {
   const createdAt = input.createdAt ?? new Date();
 
-  await withD1Retry(() =>
+  const inserted = await withD1Retry(() =>
     db
       .insert(spaceAssets)
       .values({
@@ -51,15 +51,19 @@ export async function registerSpaceAssetMetadata(
         uploadedById: input.uploadedById,
         createdAt,
       })
-      .onConflictDoNothing(),
+      .onConflictDoNothing()
+      .returning({ id: spaceAssets.id }),
   );
 
-  const existing = await db.query.spaceAssets.findFirst({
-    where: eq(spaceAssets.r2Key, input.r2Key),
-    columns: { id: true },
-  });
-  if (!existing) {
-    throw new Error(`Failed to register asset metadata for key: ${input.r2Key}`);
+  if (inserted.length === 0) {
+    // Conflict case: row already exists, verify it
+    const existing = await db.query.spaceAssets.findFirst({
+      where: eq(spaceAssets.r2Key, input.r2Key),
+      columns: { id: true },
+    });
+    if (!existing) {
+      throw new Error(`Failed to register asset metadata for key: ${input.r2Key}`);
+    }
   }
 }
 
@@ -73,7 +77,7 @@ export async function registerMeetingArtifactMetadata(
     throw new Error("sessionId is required to register meeting artifact metadata");
   }
 
-  await withD1Retry(() =>
+  const inserted = await withD1Retry(() =>
     db
       .insert(meetingArtifacts)
       .values({
@@ -88,14 +92,18 @@ export async function registerMeetingArtifactMetadata(
         uploadedById: input.uploadedById,
         createdAt,
       })
-      .onConflictDoNothing(),
+      .onConflictDoNothing()
+      .returning({ id: meetingArtifacts.id }),
   );
 
-  const existing = await db.query.meetingArtifacts.findFirst({
-    where: eq(meetingArtifacts.r2Key, input.r2Key),
-    columns: { id: true },
-  });
-  if (!existing) {
-    throw new Error(`Failed to register meeting artifact metadata for key: ${input.r2Key}`);
+  if (inserted.length === 0) {
+    // Conflict case: row already exists, verify it
+    const existing = await db.query.meetingArtifacts.findFirst({
+      where: eq(meetingArtifacts.r2Key, input.r2Key),
+      columns: { id: true },
+    });
+    if (!existing) {
+      throw new Error(`Failed to register meeting artifact metadata for key: ${input.r2Key}`);
+    }
   }
 }

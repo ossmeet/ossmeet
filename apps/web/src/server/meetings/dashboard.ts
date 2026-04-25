@@ -7,7 +7,6 @@ import {
   d1MaxItemsPerStatement,
 } from "@ossmeet/shared";
 import { authMiddleware } from "../middleware";
-import { RoomServiceClient } from "livekit-server-sdk";
 import { livekitHttpUrl } from "@/lib/meeting/livekit-helpers";
 import { withTimeout } from "@/lib/with-timeout";
 import { finalizeSessionsByMeetingIds } from "./session-finalizer";
@@ -69,6 +68,7 @@ export const getMyActiveMeetings = createServerFn({ method: "GET" })
       );
 
       if (candidates.length > 0) {
+        const { RoomServiceClient } = await import(/* @vite-ignore */ "livekit-server-sdk");
         const roomService = new RoomServiceClient(
           livekitHttpUrl(env.LIVEKIT_URL),
           env.LIVEKIT_API_KEY,

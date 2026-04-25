@@ -3,7 +3,7 @@ import { meetingArtifacts, spaceAssets } from "@ossmeet/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 export async function getUserStoredBytes(db: Database, userId: string): Promise<number> {
-  const [spaceUsage, meetingUsage] = await Promise.all([
+  const [spaceUsage, meetingUsage] = await db.batch([
     db
       .select({ total: sql<number>`COALESCE(SUM(${spaceAssets.size}), 0)` })
       .from(spaceAssets)

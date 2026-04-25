@@ -43,22 +43,18 @@ export async function resolveSessionGate(
     return { session };
   } catch (error) {
     if (isRedirect(error)) throw error;
-    // Only redirect to login if session query resolved to null (user not authenticated).
-    // Don't redirect on transient network/server errors — those would incorrectly log users out.
+
+    // Only use a previously resolved session as a fallback. Cold-load network or
+    // server failures should surface as real route errors instead of looking like
+    // a logout and bouncing the user to /auth.
     const cached = context.queryClient.getQueryData(
       sessionQueryOptions().queryKey
     );
 
-    // If we have a valid (truthy) cached session, use it even if the refetch failed.
-    // This prevents transient network errors from logging users out.
     if (cached) {
       return { session: cached };
     }
 
-    // No valid cached session — redirect to login
-    throw redirect({
-      to: "/auth",
-      search: { mode: "login", redirect: buildRedirectUrl() },
-    });
+    throw error;
   }
 }

@@ -4,7 +4,7 @@ import {
   useMutation,
   useQueryClient,
   useQueryErrorResetBoundary,
-  useSuspenseQuery,
+  useSuspenseQueries,
 } from "@tanstack/react-query";
 import type { Space, SpaceMember } from "@ossmeet/db/schema";
 import { getAssetUrl, listSpaceAssets } from "@/server/assets";
@@ -94,8 +94,9 @@ function formatBytes(bytes: number): string {
 
 function SpaceDetailPage() {
   const { spaceId } = Route.useParams();
-  const { data } = useSuspenseQuery(spaceQueryOptions(spaceId));
-  const { data: assetsData } = useSuspenseQuery(spaceAssetsQueryOptions(spaceId));
+  const [{ data }, { data: assetsData }] = useSuspenseQueries({
+    queries: [spaceQueryOptions(spaceId), spaceAssetsQueryOptions(spaceId)],
+  });
 
   const { space, role } = data;
   const assets = assetsData.assets;

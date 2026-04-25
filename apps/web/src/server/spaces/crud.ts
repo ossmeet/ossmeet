@@ -15,7 +15,7 @@ import type { PlanType } from "@ossmeet/shared";
 import { enforceRateLimit } from "../auth/helpers";
 import { authMiddleware } from "../middleware";
 import { logError } from "@/lib/logger";
-import { terminateMeetingRoom } from "../meetings/leave-end";
+import { terminateMeetingRoom } from "../meetings/leave-end.server";
 import { findSpaceMembership } from "./helpers";
 import { finalizeMeetingsEndByHostPlan } from "../meetings/finalize";
 

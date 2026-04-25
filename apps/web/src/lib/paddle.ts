@@ -96,6 +96,14 @@ export async function verifyPaddleWebhookSignature(
   const ts = parts["ts"];
   const h1 = parts["h1"];
   if (!ts || !h1) return false;
+  const timestampSeconds = Number.parseInt(ts, 10);
+  if (!Number.isFinite(timestampSeconds)) return false;
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const maxAgeSeconds = 5 * 60;
+  if (Math.abs(nowSeconds - timestampSeconds) > maxAgeSeconds) {
+    return false;
+  }
 
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -107,6 +115,9 @@ export async function verifyPaddleWebhookSignature(
   );
 
   const signedPayload = `${ts}:${rawBody}`;
-  const sigBytes = h1.match(/.{2}/g)!.map((b) => parseInt(b, 16));
+  if (!/^[\da-f]+$/i.test(h1) || h1.length % 2 !== 0) {
+    return false;
+  }
+  const sigBytes = h1.match(/.{2}/g)!.map((b) => Number.parseInt(b, 16));
   return crypto.subtle.verify("HMAC", key, new Uint8Array(sigBytes), encoder.encode(signedPayload));
 }

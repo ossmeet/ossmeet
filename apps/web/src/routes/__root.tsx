@@ -9,6 +9,13 @@ import {
 import type { QueryClient } from "@tanstack/react-query";
 import "@/styles.css";
 import { lazy, Suspense } from "react";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  createJsonLdScript,
+  buildSiteGraph,
+} from "@/lib/seo";
 
 const ReactQueryDevtools = import.meta.env.DEV
   ? lazy(() =>
@@ -35,21 +42,41 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "OSSMeet — Meetings & Whiteboards" },
+      { title: `${SITE_NAME} — Meetings & Whiteboards` },
       {
         name: "description",
-        content:
-          "Video meetings and collaborative whiteboards for educators, businesses, and schools.",
+        content: SITE_DESCRIPTION,
       },
-      { name: "theme-color", content: "#4f46e5" },
-      { property: "og:site_name", content: "OSSMeet" },
+      { name: "application-name", content: SITE_NAME },
+      { name: "apple-mobile-web-app-title", content: SITE_NAME },
+      { name: "theme-color", content: "#0f766e" },
+      { name: "referrer", content: "strict-origin-when-cross-origin" },
+      {
+        name: "robots",
+        content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      },
+      { property: "og:site_name", content: SITE_NAME },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "en_US" },
       { name: "twitter:card", content: "summary" },
     ],
     links: [
       { rel: "icon", href: "/favicon.svg" },
       { rel: "manifest", href: "/manifest.json" },
+      {
+        rel: "alternate",
+        type: "text/plain",
+        title: "LLMs",
+        href: `${SITE_URL}/llms.txt`,
+      },
+      {
+        rel: "alternate",
+        type: "application/json",
+        title: "AI Discovery",
+        href: `${SITE_URL}/api/llms.json`,
+      },
     ],
+    scripts: [createJsonLdScript(buildSiteGraph())],
   }),
   shellComponent: RootDocument,
   component: RootComponent,
@@ -104,6 +131,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="min-h-full" suppressHydrationWarning>
       <head>
+        {import.meta.env.DEV ? (
+          <script
+            type="module"
+            dangerouslySetInnerHTML={{
+              __html: `
+                import RefreshRuntime from "/@react-refresh";
+                RefreshRuntime.injectIntoGlobalHook(window);
+                window.$RefreshReg$ = () => {};
+                window.$RefreshSig$ = () => (type) => type;
+                window.__vite_plugin_react_preamble_installed__ = true;
+              `,
+            }}
+          />
+        ) : null}
         <HeadContent />
       </head>
       <body className="min-h-full bg-neutral-50 text-neutral-900 antialiased isolate" suppressHydrationWarning>
@@ -114,30 +155,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   );
 }
 
-function RouteLoadingFallback() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-6">
-      <div className="flex max-w-sm flex-col items-center gap-4 rounded-3xl border border-neutral-200/80 bg-white/90 px-8 py-7 text-center shadow-elevated backdrop-blur-sm">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-700 text-white">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        </div>
-        <div>
-          <h2 className="text-base font-semibold text-neutral-900">Loading OSSMeet</h2>
-          <p className="mt-1 text-sm text-neutral-500">
-            Fetching the next screen and its assets.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function RootComponent() {
   return (
     <>
-      <Suspense fallback={<RouteLoadingFallback />}>
-        <Outlet />
-      </Suspense>
+      <Outlet />
       {ReactQueryDevtools && (
         <Suspense fallback={null}>
           <ReactQueryDevtools buttonPosition="bottom-left" />

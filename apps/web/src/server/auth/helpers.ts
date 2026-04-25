@@ -13,7 +13,7 @@ import {
   generateId,
 } from "@ossmeet/shared";
 import { hashSessionToken, generateSessionToken, verifyGuestSecret } from "@/lib/auth/crypto";
-import { getRunChanges } from "@/lib/db-utils";
+import { getRunChanges, withD1Retry } from "@/lib/db-utils";
 import { logWarn, logError } from "@/lib/logger";
 import type { User } from "@ossmeet/db/schema";
 import type { PublicUser } from "@ossmeet/shared";
@@ -408,10 +408,12 @@ export async function maybeRefreshSession(
   if (matchedViaPrevious) {
     const newExpiresAt = new Date(Math.min(Date.now() + SESSION_EXPIRY_MS, absoluteExpiresAtMs));
     try {
-      await db
-        .update(sessions)
-        .set({ expiresAt: newExpiresAt, lastSeenAt: new Date() })
-        .where(eq(sessions.id, latest.id));
+      await withD1Retry(() =>
+        db
+          .update(sessions)
+          .set({ expiresAt: newExpiresAt, lastSeenAt: new Date() })
+          .where(eq(sessions.id, latest.id)),
+      );
       latest.expiresAt = newExpiresAt;
     } catch (err) {
       if (err instanceof AppError) throw err;
@@ -441,13 +443,15 @@ export async function maybeRefreshSession(
     };
 
     try {
-      const result = await db
-        .update(sessions)
-        .set(updatePayload)
-        .where(and(
-          eq(sessions.id, latest.id),
-          eq(sessions.rotationVersion, currentVersion)
-        ));
+      const result = await withD1Retry(() =>
+        db
+          .update(sessions)
+          .set(updatePayload)
+          .where(and(
+            eq(sessions.id, latest.id),
+            eq(sessions.rotationVersion, currentVersion)
+          )),
+      );
 
       const changes = getRunChanges(result);
       if (changes > 0) {
@@ -679,15 +683,17 @@ export async function rememberDevice(
   const request = getRequest();
   const ua = request.headers.get("User-Agent")?.slice(0, 200) ?? null;
 
-  await db.insert(devices).values({
-    id: generateId("DEVICE"),
-    userId,
-    tokenHash,
-    label: ua,
-    createdAt: now,
-    lastSeenAt: now,
-    expiresAt,
-  });
+  await withD1Retry(() =>
+    db.insert(devices).values({
+      id: generateId("DEVICE"),
+      userId,
+      tokenHash,
+      label: ua,
+      createdAt: now,
+      lastSeenAt: now,
+      expiresAt,
+    }),
+  );
 
   await enforceDeviceCap(db, userId);
 

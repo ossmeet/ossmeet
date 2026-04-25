@@ -103,18 +103,19 @@ export function QuantumActionPill({
   return (
     <div
       className={cn(
-        "fixed bottom-4 left-1/2 z-(--z-pill) -translate-x-1/2 transition-all duration-300",
-        "w-[94vw] max-w-sm"
+        "fixed bottom-3 left-1/2 z-(--z-pill) -translate-x-1/2 transition-all duration-300",
+        "w-[92vw] max-w-sm"
       )}
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
     >
       {/* Main Bar */}
       <div
         className={cn(
-          "relative flex items-center justify-between rounded-[2rem] border border-white/10 p-2 shadow-2xl",
-          "bg-neutral-900/60 backdrop-blur-[24px] saturate-[140%] shadow-indigo-500/10"
+          "relative flex items-center justify-between rounded-[1.75rem] border border-white/10 px-2.5 py-2 shadow-2xl",
+          "bg-neutral-900/70 backdrop-blur-[24px] saturate-[140%] shadow-indigo-500/10"
         )}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <ActionButton
             icon={isMicOn ? Mic : MicOff}
             active={!isMicOn}
@@ -129,27 +130,27 @@ export function QuantumActionPill({
           />
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {/* "More" popover — Base UI handles click-outside, focus trap, and a11y */}
           <PopoverRoot open={isMoreOpen} onOpenChange={handleMoreOpenChange}>
             <PopoverTrigger
               render={
                 <button
                   className={cn(
-                    "relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 active:scale-90",
-                    isMoreOpen ? "bg-white/20 text-white" : "bg-white/5 text-white/80"
+                    "relative flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 active:scale-90",
+                    isMoreOpen ? "bg-white/20 text-white" : "bg-white/8 text-white/80"
                   )}
                   aria-label="More options"
                 />
               }
             >
-              <MoreVertical size={22} strokeWidth={2} />
+              <MoreVertical size={20} strokeWidth={2} />
             </PopoverTrigger>
             <PopoverContent
               side="top"
               sideOffset={16}
               align="center"
-              className="w-[94vw] max-w-sm rounded-3xl bg-neutral-950/80 backdrop-blur-2xl border border-white/10 p-4 shadow-2xl origin-(--transform-origin) transition-[transform,scale,opacity] data-[instant]:transition-none data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0"
+              className="w-[92vw] max-w-sm rounded-3xl bg-neutral-950/80 backdrop-blur-2xl border border-white/10 p-4 shadow-2xl origin-(--transform-origin) transition-[transform,scale,opacity] data-[instant]:transition-none data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0"
             >
               {showBackgroundPicker && backgroundSupported && onBackgroundNone && onBackgroundBlur && onBackgroundImage ? (
                 <div>
@@ -262,13 +263,13 @@ export function QuantumActionPill({
             </PopoverContent>
           </PopoverRoot>
 
-          <div className="mx-1 h-6 w-px bg-white/10" />
+          <div className="mx-0.5 h-6 w-px bg-white/10" />
           <ActionButton
             icon={PhoneOff}
             label="Leave"
             onClick={onLeave}
             danger
-            className="w-14"
+            className="w-13"
           />
         </div>
       </div>
@@ -308,12 +309,12 @@ function ActionButton({
       }}
       className={cn(
         "relative flex flex-col items-center justify-center transition-all duration-300 active:scale-90",
-        small ? "h-16 gap-1" : "h-12 w-12 rounded-full",
+        small ? "h-16 gap-1" : "h-11 w-11 rounded-full",
         !small && (
            danger ? "bg-red-500/80 text-white" :
            active ? "bg-white/20 text-white" :
            accent ? "bg-accent-500/60 text-white" :
-           "bg-white/5 text-white/80"
+           "bg-white/8 text-white/80"
         ),
         small && "rounded-2xl bg-white/5 text-white/60",
         small && active && "bg-white/20 text-white",
@@ -322,7 +323,7 @@ function ActionButton({
         className
       )}
     >
-      <Icon size={small ? 20 : 22} strokeWidth={2} />
+      <Icon size={small ? 20 : 20} strokeWidth={2} />
       {small && <span className="text-2xs font-medium truncate max-w-[90%] text-center leading-tight">{label}</span>}
       {badge !== undefined && badge > 0 && (
         <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-accent-500 px-1 text-4xs font-bold text-white shadow-lg">
