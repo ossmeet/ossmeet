@@ -1,0 +1,168 @@
+# LiveKit uses host networking (docs recommendation for optimal WebRTC performance).
+# All other services use bridge networking with Docker DNS.
+# Caddy reaches host-network LiveKit through host.docker.internal; Redis exposes localhost:6379 for LiveKit.
+# Pinned image versions
+name: vps
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
+services:
+  caddy:
+    build:
+      context: ./caddy
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "443:443"
+      - "80:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    cpus: 1
+    mem_limit: 512m
+    pids_limit: 256
+    networks:
+      - internal
+
+  livekit:
+    image: livekit/livekit-server:v1.11.0
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      redis:
+        condition: service_healthy
+    # host networking: LiveKit binds ports directly on the host — no docker-proxy overhead
+    # for WebRTC UDP. Ports 7881/tcp, 7882/udp, 3478/udp, and internal TURN
+    # 5350/tcp bind directly; Caddy L4 terminates public TLS and proxies TURN
+    # to that internal port.
+    network_mode: host
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+    cpus: 4
+    mem_limit: 4g
+    pids_limit: 2048
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  redis:
+    image: redis:8-alpine
+    # Copy config and append password at runtime to avoid exposing it in process args
+    entrypoint: ["sh", "-c", "cp /etc/redis-base.conf /tmp/redis.conf && echo \"requirepass $(cat /run/secrets/redis_password)\" >> /tmp/redis.conf && exec redis-server /tmp/redis.conf"]
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - "127.0.0.1:6379:6379"   # expose to localhost so livekit (host network) can connect
+    volumes:
+      - ./redis.conf:/etc/redis-base.conf:ro
+      - ./secrets/redis_password:/run/secrets/redis_password:ro
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a \"$(cat /run/secrets/redis_password)\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    cpus: 1
+    mem_limit: 512m
+    pids_limit: 256
+    networks:
+      - internal
+
+  egress:
+    image: livekit/egress:v1.12.0
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    environment:
+      - EGRESS_CONFIG_FILE=/etc/egress.yaml
+    volumes:
+      - ./egress.yaml:/etc/egress.yaml:ro
+    cap_add:
+      # SYS_ADMIN is required by LiveKit Egress for headless Chrome sandboxing.
+      # Mitigated by no-new-privileges and resource limits. Consider isolated VM for egress.
+      - SYS_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    # Compose honors these local limits; keep deploy.resources below in sync for
+    # teams that may later run the stack under Swarm-compatible tooling.
+    cpus: 4
+    mem_limit: 4g
+    pids_limit: 1024
+    networks:
+      - internal
+
+  whiteboard:
+    build:
+      context: ../../packages/whiteboard
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:8787/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    environment:
+      - WHITEBOARD_INTERNAL_SECRET_FILE=/run/secrets/whiteboard_internal_secret
+      - WHITEBOARD_JWT_SECRET_FILE=/run/secrets/whiteboard_jwt_secret
+      - R2_ACCESS_KEY_ID_FILE=/run/secrets/r2_access_key_id
+      - R2_SECRET_ACCESS_KEY_FILE=/run/secrets/r2_secret_access_key
+      - R2_ACCOUNT_ID_FILE=/run/secrets/r2_account_id
+      - R2_BUCKET_NAME_FILE=/run/secrets/r2_bucket_name
+      - ALLOWED_ORIGINS=${WHITEBOARD_ALLOWED_ORIGINS}
+      - TRUST_PROXY_IPS=${WHITEBOARD_TRUST_PROXY_IPS:-172.16.0.0/12}
+      - PORT=8787
+      - DATA_DIR=/data/rooms
+      - APP_URL=${APP_URL}
+      - LOG_FORMAT=json
+    volumes:
+      - whiteboard_data:/data/rooms
+      - ./secrets/whiteboard_internal_secret:/run/secrets/whiteboard_internal_secret:ro
+      - ./secrets/whiteboard_jwt_secret:/run/secrets/whiteboard_jwt_secret:ro
+      - ./secrets/r2_access_key_id:/run/secrets/r2_access_key_id:ro
+      - ./secrets/r2_secret_access_key:/run/secrets/r2_secret_access_key:ro
+      - ./secrets/r2_account_id:/run/secrets/r2_account_id:ro
+      - ./secrets/r2_bucket_name:/run/secrets/r2_bucket_name:ro
+    cpus: 2
+    mem_limit: 2g
+    pids_limit: 512
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  whiteboard_data:

@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1776800219719,
+      "tag": "0000_wandering_cobalt_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1776971936759,
+      "tag": "0001_hard_stingray",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777579265036,
+      "tag": "0002_small_night_thrasher",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1777722364998,
+      "tag": "0003_mature_speed",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1777839619476,
+      "tag": "0004_redundant_karnak",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1777952618443,
+      "tag": "0005_fix_meeting_artifacts_whiteboard_prefix",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1778251720070,
+      "tag": "0006_opposite_clint_barton",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1778352000000,
+      "tag": "0007_hot_path_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1778457600000,
+      "tag": "0008_upload_reservations",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1778835229855,
+      "tag": "0009_streaming_egress",
+      "breakpoints": true
+    }
+  ]
+}

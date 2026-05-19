@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    "types": [
+      "./worker-configuration.d.ts",
+      "node",
+      "vite/client"
+    ],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@whiteboard/runtime": ["../../packages/whiteboard/src/web/whiteboard-runtime.ts"],
+      "@whiteboard/api": ["../../packages/whiteboard/src/web/api-handler.ts"],
+      "@whiteboard/dashboard": ["../../packages/whiteboard/src/web/whiteboard-dashboard.tsx"],
+      "@whiteboard/recorder": ["../../packages/whiteboard/src/web/whiteboard-recorder.tsx"],
+      "@whiteboard/server": ["../../packages/whiteboard/src/web/whiteboard-server.ts"],
+      "@whiteboard/use-audio-cancellation": ["../../packages/whiteboard/src/web/use-audio-cancellation.stub.ts"],
+      "drizzle-orm": ["./node_modules/drizzle-orm"],
+      "drizzle-orm/*": ["./node_modules/drizzle-orm/*"]
+    }
+  }
+}

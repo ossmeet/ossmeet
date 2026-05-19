@@ -1,0 +1,4 @@
+@import "tldraw/tldraw.css";
+@import "../components/whiteboard-canvas.css";
+
+@source "../";

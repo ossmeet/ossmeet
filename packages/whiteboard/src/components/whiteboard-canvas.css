@@ -1,0 +1,168 @@
+.whiteboard-document .tl-background {
+  background-color: #ffffff !important;
+}
+
+/* iOS Safari: prevent browser gesture interference with tldraw touch handling */
+.whiteboard-document {
+  touch-action: none;
+  position: relative;
+  background: #ffffff;
+}
+
+/* iOS Safari: prevent content shift / rubber-banding on scroll */
+.whiteboard-document .tl-canvas {
+  overscroll-behavior: none;
+  background: #ffffff;
+}
+
+.whiteboard-document .tl-laser-scribble {
+  overflow: visible;
+}
+
+/* ============================================================
+   Overlay controls anchored to the whiteboard pane
+   (not the full browser viewport)
+   ============================================================ */
+
+/* Dynamic Island centering & layout */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Position the Viewport Controls (Bottom Right) */
+.whiteboard-viewport-controls {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 200;
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .whiteboard-viewport-controls {
+    right: 0.5rem;
+    left: 0.5rem;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8.5rem);
+    justify-content: center;
+  }
+}
+
+/* Compact mode (mobile landscape): smaller offsets */
+@media (max-height: 500px) and (orientation: landscape) {
+  .whiteboard-viewport-controls {
+    bottom: 0.5rem;
+  }
+}
+
+/* ============================================================
+   Table shape styles
+   ============================================================ */
+
+.ossmeet-table-shape {
+  position: relative;
+  background: #ffffff;
+  border-radius: 6px;
+  overflow: visible;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.ossmeet-table-shape table {
+  overflow: hidden;
+  border-radius: 6px;
+  /* Outer table border replaces the previous wrapper border so the grid is
+     drawn exactly once (no double-border seam between wrapper and cells). */
+  outline: 1px solid #d4d4d8;
+  outline-offset: -1px;
+}
+
+.ossmeet-table-header-cell {
+  border: 1px solid #d4d4d8;
+  padding: 0;
+  background: #f4f4f5;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.ossmeet-table-cell {
+  border: 1px solid #d4d4d8;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.ossmeet-table-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  font: inherit;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+.ossmeet-table-input:focus {
+  background: #eff6ff;
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+.ossmeet-table-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 2px 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ossmeet-table-controls {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -1px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.ossmeet-table-ctrl-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #f4f4f5;
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #3f3f46;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.ossmeet-table-ctrl-btn:hover {
+  background: #e4e4e7;
+}
+
+.ossmeet-table-ctrl-btn--danger {
+  color: #dc2626;
+}
+
+.ossmeet-table-ctrl-btn--danger:hover {
+  background: #fee2e2;
+}

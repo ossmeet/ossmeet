@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify no private files in repo
+        run: |
+          fail=0
+          for file in \
+            "packages/whiteboard/src/addons.mjs" \
+            "apps/web/public/_runtime/krisp"; do
+            if [ -e "$file" ]; then
+              echo "::error::Private file detected: $file"
+              fail=1
+            fi
+          done
+          if [ "$fail" -eq 1 ]; then
+            echo "::error::Private addon files found in repo — these must stay gitignored."
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install
+
+      - name: Generate config stubs for CI
+        run: |
+          cp apps/web/worker-configuration.d.ts.example apps/web/worker-configuration.d.ts
+          cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc
+          cp apps/web/.dev.vars.example apps/web/.dev.vars
+
+      - run: pnpm typecheck
+
+      - run: pnpm test
+
+      - run: pnpm build

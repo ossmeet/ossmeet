@@ -1,0 +1,49 @@
+{
+	storage file_system {
+		root /data
+	}
+
+	log default {
+		output stdout
+		format json
+	}
+
+	servers :443 {
+		# HTTP/1.1 and HTTP/2 only; no HTTP/3 since UDP 443 is not exposed.
+		protocols h1 h2
+		listener_wrappers {
+			layer4 {
+				# TURN/TLS: intercept by SNI before HTTP processing.
+				# LiveKit's embedded TURN server runs on the host network with
+				# external_tls=true, so we terminate TLS here and proxy plain TURN.
+				@turn tls sni ${LIVEKIT_TURN_DOMAIN}
+				route @turn {
+					tls
+					proxy tcp/host.docker.internal:5350
+				}
+			}
+			tls
+		}
+	}
+}
+
+# Trigger certificate automation for the TURN domain.
+# Actual TURN traffic is handled by the L4 listener wrapper above
+# and never reaches this HTTP handler.
+${LIVEKIT_TURN_DOMAIN} {
+	respond "TURN endpoint" 200
+}
+
+${LIVEKIT_DOMAIN} {
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	reverse_proxy host.docker.internal:7880 {
+		flush_interval -1
+	}
+}
+
+${WHITEBOARD_DOMAIN} {
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	reverse_proxy whiteboard:8787 {
+		flush_interval -1
+	}
+}

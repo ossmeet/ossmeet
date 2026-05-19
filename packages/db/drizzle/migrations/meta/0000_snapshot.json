@@ -1,0 +1,2386 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "7b5a935a-ee6c-4e05-81f6-1f30b80e1bb9",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "accounts": {
+      "name": "accounts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_account_id": {
+          "name": "provider_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "linked_at": {
+          "name": "linked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "accounts_user_id_idx": {
+          "name": "accounts_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "accounts_provider_account_idx": {
+          "name": "accounts_provider_account_idx",
+          "columns": [
+            "provider_id",
+            "provider_account_id"
+          ],
+          "isUnique": true
+        },
+        "accounts_user_provider_idx": {
+          "name": "accounts_user_provider_idx",
+          "columns": [
+            "user_id",
+            "provider_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "accounts_user_id_users_id_fk": {
+          "name": "accounts_user_id_users_id_fk",
+          "tableFrom": "accounts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "devices": {
+      "name": "devices",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "devices_token_hash_unique": {
+          "name": "devices_token_hash_unique",
+          "columns": [
+            "token_hash"
+          ],
+          "isUnique": true
+        },
+        "devices_user_id_idx": {
+          "name": "devices_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "devices_expires_at_idx": {
+          "name": "devices_expires_at_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "devices_user_id_users_id_fk": {
+          "name": "devices_user_id_users_id_fk",
+          "tableFrom": "devices",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "devices_token_hash_length_check": {
+          "name": "devices_token_hash_length_check",
+          "value": "length(\"devices\".\"token_hash\") = 64"
+        },
+        "devices_expires_after_created_check": {
+          "name": "devices_expires_after_created_check",
+          "value": "\"devices\".\"expires_at\" >= \"devices\".\"created_at\""
+        },
+        "devices_last_seen_after_created_check": {
+          "name": "devices_last_seen_after_created_check",
+          "value": "\"devices\".\"last_seen_at\" IS NULL OR \"devices\".\"last_seen_at\" >= \"devices\".\"created_at\""
+        },
+        "devices_label_length_check": {
+          "name": "devices_label_length_check",
+          "value": "\"devices\".\"label\" IS NULL OR length(\"devices\".\"label\") <= 200"
+        }
+      }
+    },
+    "meeting_artifacts": {
+      "name": "meeting_artifacts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "r2_key": {
+          "name": "r2_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "filename": {
+          "name": "filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "size": {
+          "name": "size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "uploaded_by_id": {
+          "name": "uploaded_by_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "meeting_artifacts_r2_key_unique": {
+          "name": "meeting_artifacts_r2_key_unique",
+          "columns": [
+            "r2_key"
+          ],
+          "isUnique": true
+        },
+        "meeting_artifacts_session_id_created_at_idx": {
+          "name": "meeting_artifacts_session_id_created_at_idx",
+          "columns": [
+            "session_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "meeting_artifacts_space_id_created_at_idx": {
+          "name": "meeting_artifacts_space_id_created_at_idx",
+          "columns": [
+            "space_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "meeting_artifacts_session_type_idx": {
+          "name": "meeting_artifacts_session_type_idx",
+          "columns": [
+            "session_id",
+            "type"
+          ],
+          "isUnique": false
+        },
+        "meeting_artifacts_uploaded_by_id_idx": {
+          "name": "meeting_artifacts_uploaded_by_id_idx",
+          "columns": [
+            "uploaded_by_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "meeting_artifacts_session_id_meeting_sessions_id_fk": {
+          "name": "meeting_artifacts_session_id_meeting_sessions_id_fk",
+          "tableFrom": "meeting_artifacts",
+          "tableTo": "meeting_sessions",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "meeting_artifacts_space_id_spaces_id_fk": {
+          "name": "meeting_artifacts_space_id_spaces_id_fk",
+          "tableFrom": "meeting_artifacts",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "meeting_artifacts_uploaded_by_id_users_id_fk": {
+          "name": "meeting_artifacts_uploaded_by_id_users_id_fk",
+          "tableFrom": "meeting_artifacts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "uploaded_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "meeting_artifacts_type_check": {
+          "name": "meeting_artifacts_type_check",
+          "value": "\"meeting_artifacts\".\"type\" in ('recording', 'whiteboard_snapshot', 'whiteboard_state', 'whiteboard_pdf')"
+        },
+        "meeting_artifacts_size_nonnegative_check": {
+          "name": "meeting_artifacts_size_nonnegative_check",
+          "value": "\"meeting_artifacts\".\"size\" >= 0"
+        },
+        "meeting_artifacts_filename_length_check": {
+          "name": "meeting_artifacts_filename_length_check",
+          "value": "length(\"meeting_artifacts\".\"filename\") <= 255 AND length(trim(\"meeting_artifacts\".\"filename\")) BETWEEN 1 AND 255"
+        },
+        "meeting_artifacts_mime_type_length_check": {
+          "name": "meeting_artifacts_mime_type_length_check",
+          "value": "length(\"meeting_artifacts\".\"mime_type\") <= 100 AND length(trim(\"meeting_artifacts\".\"mime_type\")) BETWEEN 1 AND 100"
+        },
+        "meeting_artifacts_r2_key_length_check": {
+          "name": "meeting_artifacts_r2_key_length_check",
+          "value": "length(\"meeting_artifacts\".\"r2_key\") <= 512"
+        },
+        "meeting_artifacts_r2_key_check": {
+          "name": "meeting_artifacts_r2_key_check",
+          "value": "(\n        (\"meeting_artifacts\".\"type\" = 'recording' AND \"meeting_artifacts\".\"r2_key\" LIKE 'recordings/%')\n        OR (\"meeting_artifacts\".\"type\" = 'whiteboard_snapshot' AND \"meeting_artifacts\".\"r2_key\" LIKE 'whiteboards/%')\n        OR (\"meeting_artifacts\".\"type\" IN ('whiteboard_state', 'whiteboard_pdf') AND \"meeting_artifacts\".\"r2_key\" LIKE 'whiteboard/%')\n      )"
+        }
+      }
+    },
+    "meeting_participants": {
+      "name": "meeting_participants",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'participant'"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "livekit_identity": {
+          "name": "livekit_identity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "guest_secret": {
+          "name": "guest_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "left_at": {
+          "name": "left_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "meeting_participants_meeting_status_idx": {
+          "name": "meeting_participants_meeting_status_idx",
+          "columns": [
+            "session_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "meeting_participants_meeting_user_status_idx": {
+          "name": "meeting_participants_meeting_user_status_idx",
+          "columns": [
+            "session_id",
+            "user_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "meeting_participants_user_id_idx": {
+          "name": "meeting_participants_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "meeting_participants_meeting_identity_unique_idx": {
+          "name": "meeting_participants_meeting_identity_unique_idx",
+          "columns": [
+            "session_id",
+            "livekit_identity"
+          ],
+          "isUnique": true,
+          "where": "\"meeting_participants\".\"livekit_identity\" IS NOT NULL"
+        },
+        "meeting_participants_active_user_idx": {
+          "name": "meeting_participants_active_user_idx",
+          "columns": [
+            "session_id",
+            "user_id"
+          ],
+          "isUnique": false,
+          "where": "\"meeting_participants\".\"status\" IN ('pending', 'active') AND \"meeting_participants\".\"user_id\" IS NOT NULL"
+        }
+      },
+      "foreignKeys": {
+        "meeting_participants_session_id_meeting_sessions_id_fk": {
+          "name": "meeting_participants_session_id_meeting_sessions_id_fk",
+          "tableFrom": "meeting_participants",
+          "tableTo": "meeting_sessions",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "meeting_participants_user_id_users_id_fk": {
+          "name": "meeting_participants_user_id_users_id_fk",
+          "tableFrom": "meeting_participants",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "meeting_participants_role_check": {
+          "name": "meeting_participants_role_check",
+          "value": "\"meeting_participants\".\"role\" in ('host', 'participant', 'guest')"
+        },
+        "meeting_participants_status_check": {
+          "name": "meeting_participants_status_check",
+          "value": "\"meeting_participants\".\"status\" in ('awaiting_approval', 'pending', 'active', 'left', 'aborted', 'denied')"
+        },
+        "meeting_participants_guest_shape_check": {
+          "name": "meeting_participants_guest_shape_check",
+          "value": "(\n        (\"meeting_participants\".\"user_id\" IS NOT NULL AND \"meeting_participants\".\"guest_secret\" IS NULL AND \"meeting_participants\".\"role\" IN ('host', 'participant'))\n        OR (\"meeting_participants\".\"user_id\" IS NULL AND \"meeting_participants\".\"guest_secret\" IS NOT NULL AND \"meeting_participants\".\"role\" = 'guest')\n      )"
+        },
+        "meeting_participants_terminal_left_at_check": {
+          "name": "meeting_participants_terminal_left_at_check",
+          "value": "(\n        (\"meeting_participants\".\"status\" IN ('awaiting_approval', 'pending', 'active') AND \"meeting_participants\".\"left_at\" IS NULL)\n        OR (\"meeting_participants\".\"status\" IN ('left', 'aborted', 'denied') AND \"meeting_participants\".\"left_at\" IS NOT NULL)\n      )"
+        },
+        "meeting_participants_left_after_join_check": {
+          "name": "meeting_participants_left_after_join_check",
+          "value": "\"meeting_participants\".\"left_at\" IS NULL OR \"meeting_participants\".\"left_at\" >= \"meeting_participants\".\"joined_at\""
+        },
+        "meeting_participants_display_name_length_check": {
+          "name": "meeting_participants_display_name_length_check",
+          "value": "length(\"meeting_participants\".\"display_name\") <= 100 AND length(trim(\"meeting_participants\".\"display_name\")) BETWEEN 1 AND 100"
+        }
+      }
+    },
+    "meeting_sessions": {
+      "name": "meeting_sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_slug": {
+          "name": "public_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "host_id": {
+          "name": "host_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "allow_guests": {
+          "name": "allow_guests",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "recording_enabled": {
+          "name": "recording_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "require_approval": {
+          "name": "require_approval",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "locked": {
+          "name": "locked",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "active_egress_id": {
+          "name": "active_egress_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "retain_until": {
+          "name": "retain_until",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "meeting_sessions_room_status_idx": {
+          "name": "meeting_sessions_room_status_idx",
+          "columns": [
+            "room_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "meeting_sessions_active_room_unique_idx": {
+          "name": "meeting_sessions_active_room_unique_idx",
+          "columns": [
+            "room_id"
+          ],
+          "isUnique": true,
+          "where": "\"meeting_sessions\".\"status\" = 'active'"
+        },
+        "meeting_sessions_room_public_slug_unique_idx": {
+          "name": "meeting_sessions_room_public_slug_unique_idx",
+          "columns": [
+            "room_id",
+            "public_slug"
+          ],
+          "isUnique": true
+        },
+        "meeting_sessions_space_id_status_idx": {
+          "name": "meeting_sessions_space_id_status_idx",
+          "columns": [
+            "space_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "meeting_sessions_host_id_status_idx": {
+          "name": "meeting_sessions_host_id_status_idx",
+          "columns": [
+            "host_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "meeting_sessions_status_started_at_idx": {
+          "name": "meeting_sessions_status_started_at_idx",
+          "columns": [
+            "status",
+            "started_at"
+          ],
+          "isUnique": false
+        },
+        "meeting_sessions_retain_until_idx": {
+          "name": "meeting_sessions_retain_until_idx",
+          "columns": [
+            "retain_until"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "meeting_sessions_room_id_rooms_id_fk": {
+          "name": "meeting_sessions_room_id_rooms_id_fk",
+          "tableFrom": "meeting_sessions",
+          "tableTo": "rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "meeting_sessions_host_id_users_id_fk": {
+          "name": "meeting_sessions_host_id_users_id_fk",
+          "tableFrom": "meeting_sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "host_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "meeting_sessions_space_id_spaces_id_fk": {
+          "name": "meeting_sessions_space_id_spaces_id_fk",
+          "tableFrom": "meeting_sessions",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "meeting_sessions_public_slug_length_check": {
+          "name": "meeting_sessions_public_slug_length_check",
+          "value": "length(\"meeting_sessions\".\"public_slug\") <= 32 AND length(trim(\"meeting_sessions\".\"public_slug\")) BETWEEN 1 AND 32"
+        },
+        "meeting_sessions_title_length_check": {
+          "name": "meeting_sessions_title_length_check",
+          "value": "\"meeting_sessions\".\"title\" IS NULL OR length(\"meeting_sessions\".\"title\") <= 200"
+        },
+        "meeting_sessions_status_check": {
+          "name": "meeting_sessions_status_check",
+          "value": "\"meeting_sessions\".\"status\" in ('active', 'ended')"
+        },
+        "meeting_sessions_lifecycle_check": {
+          "name": "meeting_sessions_lifecycle_check",
+          "value": "(\n        (\"meeting_sessions\".\"status\" = 'active' AND \"meeting_sessions\".\"ended_at\" IS NULL)\n        OR (\"meeting_sessions\".\"status\" = 'ended' AND \"meeting_sessions\".\"ended_at\" IS NOT NULL)\n      )"
+        },
+        "meeting_sessions_ended_after_started_check": {
+          "name": "meeting_sessions_ended_after_started_check",
+          "value": "\"meeting_sessions\".\"ended_at\" IS NULL OR \"meeting_sessions\".\"ended_at\" >= \"meeting_sessions\".\"started_at\""
+        },
+        "meeting_sessions_retain_after_end_check": {
+          "name": "meeting_sessions_retain_after_end_check",
+          "value": "\"meeting_sessions\".\"retain_until\" IS NULL OR (\"meeting_sessions\".\"ended_at\" IS NOT NULL AND \"meeting_sessions\".\"retain_until\" >= \"meeting_sessions\".\"ended_at\")"
+        },
+        "meeting_sessions_updated_after_started_check": {
+          "name": "meeting_sessions_updated_after_started_check",
+          "value": "\"meeting_sessions\".\"updated_at\" >= \"meeting_sessions\".\"started_at\""
+        },
+        "meeting_sessions_ended_egress_cleared_check": {
+          "name": "meeting_sessions_ended_egress_cleared_check",
+          "value": "\"meeting_sessions\".\"status\" = 'active' OR \"meeting_sessions\".\"active_egress_id\" IS NULL"
+        }
+      }
+    },
+    "meeting_summaries": {
+      "name": "meeting_summaries",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "topics": {
+          "name": "topics",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "action_items": {
+          "name": "action_items",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "decisions": {
+          "name": "decisions",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_seconds": {
+          "name": "duration_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "participant_count": {
+          "name": "participant_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "meeting_summaries_session_id_unique": {
+          "name": "meeting_summaries_session_id_unique",
+          "columns": [
+            "session_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "meeting_summaries_session_id_meeting_sessions_id_fk": {
+          "name": "meeting_summaries_session_id_meeting_sessions_id_fk",
+          "tableFrom": "meeting_summaries",
+          "tableTo": "meeting_sessions",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "meeting_summaries_topics_json_check": {
+          "name": "meeting_summaries_topics_json_check",
+          "value": "\"meeting_summaries\".\"topics\" IS NULL OR (json_valid(\"meeting_summaries\".\"topics\") AND json_type(\"meeting_summaries\".\"topics\") = 'array')"
+        },
+        "meeting_summaries_topics_length_check": {
+          "name": "meeting_summaries_topics_length_check",
+          "value": "\"meeting_summaries\".\"topics\" IS NULL OR length(\"meeting_summaries\".\"topics\") <= 32768"
+        },
+        "meeting_summaries_action_items_json_check": {
+          "name": "meeting_summaries_action_items_json_check",
+          "value": "\"meeting_summaries\".\"action_items\" IS NULL OR (json_valid(\"meeting_summaries\".\"action_items\") AND json_type(\"meeting_summaries\".\"action_items\") = 'array')"
+        },
+        "meeting_summaries_action_items_length_check": {
+          "name": "meeting_summaries_action_items_length_check",
+          "value": "\"meeting_summaries\".\"action_items\" IS NULL OR length(\"meeting_summaries\".\"action_items\") <= 32768"
+        },
+        "meeting_summaries_decisions_json_check": {
+          "name": "meeting_summaries_decisions_json_check",
+          "value": "\"meeting_summaries\".\"decisions\" IS NULL OR (json_valid(\"meeting_summaries\".\"decisions\") AND json_type(\"meeting_summaries\".\"decisions\") = 'array')"
+        },
+        "meeting_summaries_decisions_length_check": {
+          "name": "meeting_summaries_decisions_length_check",
+          "value": "\"meeting_summaries\".\"decisions\" IS NULL OR length(\"meeting_summaries\".\"decisions\") <= 32768"
+        },
+        "meeting_summaries_duration_nonnegative_check": {
+          "name": "meeting_summaries_duration_nonnegative_check",
+          "value": "\"meeting_summaries\".\"duration_seconds\" IS NULL OR \"meeting_summaries\".\"duration_seconds\" >= 0"
+        },
+        "meeting_summaries_participant_count_nonnegative_check": {
+          "name": "meeting_summaries_participant_count_nonnegative_check",
+          "value": "\"meeting_summaries\".\"participant_count\" IS NULL OR \"meeting_summaries\".\"participant_count\" >= 0"
+        }
+      }
+    },
+    "passkeys": {
+      "name": "passkeys",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "credential_id": {
+          "name": "credential_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_key": {
+          "name": "public_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "counter": {
+          "name": "counter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "device_type": {
+          "name": "device_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "backed_up": {
+          "name": "backed_up",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "transports": {
+          "name": "transports",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_used_at": {
+          "name": "last_used_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "passkeys_credential_id_unique": {
+          "name": "passkeys_credential_id_unique",
+          "columns": [
+            "credential_id"
+          ],
+          "isUnique": true
+        },
+        "passkeys_user_id_idx": {
+          "name": "passkeys_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "passkeys_user_id_users_id_fk": {
+          "name": "passkeys_user_id_users_id_fk",
+          "tableFrom": "passkeys",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "passkeys_credential_id_length_check": {
+          "name": "passkeys_credential_id_length_check",
+          "value": "length(\"passkeys\".\"credential_id\") <= 1024"
+        },
+        "passkeys_public_key_length_check": {
+          "name": "passkeys_public_key_length_check",
+          "value": "length(\"passkeys\".\"public_key\") <= 1024"
+        },
+        "passkeys_device_type_check": {
+          "name": "passkeys_device_type_check",
+          "value": "\"passkeys\".\"device_type\" in ('singleDevice', 'multiDevice')"
+        },
+        "passkeys_counter_nonnegative_check": {
+          "name": "passkeys_counter_nonnegative_check",
+          "value": "\"passkeys\".\"counter\" >= 0"
+        },
+        "passkeys_transports_json_check": {
+          "name": "passkeys_transports_json_check",
+          "value": "\"passkeys\".\"transports\" IS NULL OR (json_valid(\"passkeys\".\"transports\") AND json_type(\"passkeys\".\"transports\") = 'array')"
+        },
+        "passkeys_transports_length_check": {
+          "name": "passkeys_transports_length_check",
+          "value": "\"passkeys\".\"transports\" IS NULL OR length(\"passkeys\".\"transports\") <= 1024"
+        },
+        "passkeys_last_used_after_created_check": {
+          "name": "passkeys_last_used_after_created_check",
+          "value": "\"passkeys\".\"last_used_at\" IS NULL OR \"passkeys\".\"last_used_at\" >= \"passkeys\".\"created_at\""
+        },
+        "passkeys_name_length_check": {
+          "name": "passkeys_name_length_check",
+          "value": "\"passkeys\".\"name\" IS NULL OR length(\"passkeys\".\"name\") <= 120"
+        }
+      }
+    },
+    "rooms": {
+      "name": "rooms",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'instant'"
+        },
+        "host_id": {
+          "name": "host_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "allow_guests": {
+          "name": "allow_guests",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "recording_enabled": {
+          "name": "recording_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "require_approval": {
+          "name": "require_approval",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "last_used_at": {
+          "name": "last_used_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "rooms_code_unique": {
+          "name": "rooms_code_unique",
+          "columns": [
+            "code"
+          ],
+          "isUnique": true
+        },
+        "rooms_host_id_idx": {
+          "name": "rooms_host_id_idx",
+          "columns": [
+            "host_id"
+          ],
+          "isUnique": false
+        },
+        "rooms_host_last_used_idx": {
+          "name": "rooms_host_last_used_idx",
+          "columns": [
+            "host_id",
+            "last_used_at"
+          ],
+          "isUnique": false
+        },
+        "rooms_space_id_idx": {
+          "name": "rooms_space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        },
+        "rooms_expires_at_idx": {
+          "name": "rooms_expires_at_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "rooms_host_id_users_id_fk": {
+          "name": "rooms_host_id_users_id_fk",
+          "tableFrom": "rooms",
+          "tableTo": "users",
+          "columnsFrom": [
+            "host_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "rooms_space_id_spaces_id_fk": {
+          "name": "rooms_space_id_spaces_id_fk",
+          "tableFrom": "rooms",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "rooms_code_shape_check": {
+          "name": "rooms_code_shape_check",
+          "value": "\n    length(\"rooms\".\"code\") = 12\n    AND substr(\"rooms\".\"code\", 4, 1) = '-'\n    AND substr(\"rooms\".\"code\", 9, 1) = '-'\n    AND lower(\"rooms\".\"code\") = \"rooms\".\"code\"\n    AND substr(\"rooms\".\"code\", 1, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 2, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 3, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 5, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 6, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 7, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 8, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 10, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 11, 1) BETWEEN 'a' AND 'z' AND substr(\"rooms\".\"code\", 12, 1) BETWEEN 'a' AND 'z'\n  "
+        },
+        "rooms_type_check": {
+          "name": "rooms_type_check",
+          "value": "\"rooms\".\"type\" in ('instant', 'permanent')"
+        },
+        "rooms_title_length_check": {
+          "name": "rooms_title_length_check",
+          "value": "\"rooms\".\"title\" IS NULL OR length(\"rooms\".\"title\") <= 200"
+        },
+        "rooms_expiry_after_created_check": {
+          "name": "rooms_expiry_after_created_check",
+          "value": "\"rooms\".\"expires_at\" IS NULL OR \"rooms\".\"expires_at\" >= \"rooms\".\"created_at\""
+        },
+        "rooms_last_used_after_created_check": {
+          "name": "rooms_last_used_after_created_check",
+          "value": "\"rooms\".\"last_used_at\" IS NULL OR \"rooms\".\"last_used_at\" >= \"rooms\".\"created_at\""
+        },
+        "rooms_last_used_before_expiry_check": {
+          "name": "rooms_last_used_before_expiry_check",
+          "value": "\"rooms\".\"expires_at\" IS NULL OR \"rooms\".\"last_used_at\" IS NULL OR \"rooms\".\"last_used_at\" <= \"rooms\".\"expires_at\""
+        },
+        "rooms_archived_after_created_check": {
+          "name": "rooms_archived_after_created_check",
+          "value": "\"rooms\".\"archived_at\" IS NULL OR \"rooms\".\"archived_at\" >= \"rooms\".\"created_at\""
+        },
+        "rooms_updated_after_created_check": {
+          "name": "rooms_updated_after_created_check",
+          "value": "\"rooms\".\"updated_at\" >= \"rooms\".\"created_at\""
+        }
+      }
+    },
+    "sessions": {
+      "name": "sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "previous_token_hash": {
+          "name": "previous_token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rotation_version": {
+          "name": "rotation_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "absolute_expires_at": {
+          "name": "absolute_expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "sessions_token_hash_unique": {
+          "name": "sessions_token_hash_unique",
+          "columns": [
+            "token_hash"
+          ],
+          "isUnique": true
+        },
+        "sessions_user_id_idx": {
+          "name": "sessions_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "sessions_expires_at_idx": {
+          "name": "sessions_expires_at_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        },
+        "sessions_absolute_expires_at_idx": {
+          "name": "sessions_absolute_expires_at_idx",
+          "columns": [
+            "absolute_expires_at"
+          ],
+          "isUnique": false
+        },
+        "sessions_previous_token_hash_idx": {
+          "name": "sessions_previous_token_hash_idx",
+          "columns": [
+            "previous_token_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "sessions_user_id_users_id_fk": {
+          "name": "sessions_user_id_users_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sessions_token_hash_length_check": {
+          "name": "sessions_token_hash_length_check",
+          "value": "length(\"sessions\".\"token_hash\") = 64"
+        },
+        "sessions_previous_token_hash_length_check": {
+          "name": "sessions_previous_token_hash_length_check",
+          "value": "\"sessions\".\"previous_token_hash\" IS NULL OR length(\"sessions\".\"previous_token_hash\") = 64"
+        },
+        "sessions_expires_after_created_check": {
+          "name": "sessions_expires_after_created_check",
+          "value": "\"sessions\".\"expires_at\" >= \"sessions\".\"created_at\""
+        },
+        "sessions_absolute_expires_after_expires_check": {
+          "name": "sessions_absolute_expires_after_expires_check",
+          "value": "\"sessions\".\"absolute_expires_at\" >= \"sessions\".\"expires_at\""
+        },
+        "sessions_last_seen_after_created_check": {
+          "name": "sessions_last_seen_after_created_check",
+          "value": "\"sessions\".\"last_seen_at\" IS NULL OR \"sessions\".\"last_seen_at\" >= \"sessions\".\"created_at\""
+        },
+        "sessions_ip_address_length_check": {
+          "name": "sessions_ip_address_length_check",
+          "value": "\"sessions\".\"ip_address\" IS NULL OR length(\"sessions\".\"ip_address\") <= 64"
+        },
+        "sessions_user_agent_length_check": {
+          "name": "sessions_user_agent_length_check",
+          "value": "\"sessions\".\"user_agent\" IS NULL OR length(\"sessions\".\"user_agent\") <= 500"
+        }
+      }
+    },
+    "space_assets": {
+      "name": "space_assets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "r2_key": {
+          "name": "r2_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "filename": {
+          "name": "filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "size": {
+          "name": "size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "uploaded_by_id": {
+          "name": "uploaded_by_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "space_assets_r2_key_unique": {
+          "name": "space_assets_r2_key_unique",
+          "columns": [
+            "r2_key"
+          ],
+          "isUnique": true
+        },
+        "space_assets_space_id_created_at_idx": {
+          "name": "space_assets_space_id_created_at_idx",
+          "columns": [
+            "space_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "space_assets_uploaded_by_id_idx": {
+          "name": "space_assets_uploaded_by_id_idx",
+          "columns": [
+            "uploaded_by_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "space_assets_space_id_spaces_id_fk": {
+          "name": "space_assets_space_id_spaces_id_fk",
+          "tableFrom": "space_assets",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_assets_uploaded_by_id_users_id_fk": {
+          "name": "space_assets_uploaded_by_id_users_id_fk",
+          "tableFrom": "space_assets",
+          "tableTo": "users",
+          "columnsFrom": [
+            "uploaded_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "space_assets_type_check": {
+          "name": "space_assets_type_check",
+          "value": "\"space_assets\".\"type\" in ('pdf')"
+        },
+        "space_assets_size_nonnegative_check": {
+          "name": "space_assets_size_nonnegative_check",
+          "value": "\"space_assets\".\"size\" >= 0"
+        },
+        "space_assets_filename_length_check": {
+          "name": "space_assets_filename_length_check",
+          "value": "length(\"space_assets\".\"filename\") <= 255 AND length(trim(\"space_assets\".\"filename\")) BETWEEN 1 AND 255"
+        },
+        "space_assets_mime_type_length_check": {
+          "name": "space_assets_mime_type_length_check",
+          "value": "length(\"space_assets\".\"mime_type\") <= 100 AND length(trim(\"space_assets\".\"mime_type\")) BETWEEN 1 AND 100"
+        },
+        "space_assets_r2_key_length_check": {
+          "name": "space_assets_r2_key_length_check",
+          "value": "length(\"space_assets\".\"r2_key\") <= 512"
+        },
+        "space_assets_r2_key_check": {
+          "name": "space_assets_r2_key_check",
+          "value": "\"space_assets\".\"type\" = 'pdf' AND (\"space_assets\".\"r2_key\" LIKE 'uploads/%' OR \"space_assets\".\"r2_key\" LIKE 'spaces/%')"
+        }
+      }
+    },
+    "space_invites": {
+      "name": "space_invites",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'member'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "max_uses": {
+          "name": "max_uses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "use_count": {
+          "name": "use_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "space_invites_token_unique": {
+          "name": "space_invites_token_unique",
+          "columns": [
+            "token"
+          ],
+          "isUnique": true
+        },
+        "space_invites_space_id_idx": {
+          "name": "space_invites_space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        },
+        "space_invites_expires_at_idx": {
+          "name": "space_invites_expires_at_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "space_invites_space_id_spaces_id_fk": {
+          "name": "space_invites_space_id_spaces_id_fk",
+          "tableFrom": "space_invites",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_invites_created_by_id_users_id_fk": {
+          "name": "space_invites_created_by_id_users_id_fk",
+          "tableFrom": "space_invites",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "space_invites_token_length_check": {
+          "name": "space_invites_token_length_check",
+          "value": "length(\"space_invites\".\"token\") = 64"
+        },
+        "space_invites_role_check": {
+          "name": "space_invites_role_check",
+          "value": "\"space_invites\".\"role\" in ('admin', 'member')"
+        },
+        "space_invites_use_count_nonnegative_check": {
+          "name": "space_invites_use_count_nonnegative_check",
+          "value": "\"space_invites\".\"use_count\" >= 0"
+        },
+        "space_invites_max_uses_positive_check": {
+          "name": "space_invites_max_uses_positive_check",
+          "value": "\"space_invites\".\"max_uses\" IS NULL OR \"space_invites\".\"max_uses\" > 0"
+        },
+        "space_invites_use_count_within_limit_check": {
+          "name": "space_invites_use_count_within_limit_check",
+          "value": "\"space_invites\".\"max_uses\" IS NULL OR \"space_invites\".\"use_count\" <= \"space_invites\".\"max_uses\""
+        },
+        "space_invites_expiry_after_created_check": {
+          "name": "space_invites_expiry_after_created_check",
+          "value": "\"space_invites\".\"expires_at\" >= \"space_invites\".\"created_at\""
+        }
+      }
+    },
+    "space_members": {
+      "name": "space_members",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'member'"
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "space_members_user_id_idx": {
+          "name": "space_members_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "space_members_unique_idx": {
+          "name": "space_members_unique_idx",
+          "columns": [
+            "space_id",
+            "user_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "space_members_space_id_spaces_id_fk": {
+          "name": "space_members_space_id_spaces_id_fk",
+          "tableFrom": "space_members",
+          "tableTo": "spaces",
+          "columnsFrom": [
+            "space_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "space_members_user_id_users_id_fk": {
+          "name": "space_members_user_id_users_id_fk",
+          "tableFrom": "space_members",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "space_members_role_check": {
+          "name": "space_members_role_check",
+          "value": "\"space_members\".\"role\" in ('owner', 'admin', 'member')"
+        }
+      }
+    },
+    "spaces": {
+      "name": "spaces",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "spaces_slug_unique": {
+          "name": "spaces_slug_unique",
+          "columns": [
+            "slug"
+          ],
+          "isUnique": true
+        },
+        "spaces_owner_id_idx": {
+          "name": "spaces_owner_id_idx",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": false
+        },
+        "spaces_owner_archived_idx": {
+          "name": "spaces_owner_archived_idx",
+          "columns": [
+            "owner_id",
+            "archived_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "spaces_owner_id_users_id_fk": {
+          "name": "spaces_owner_id_users_id_fk",
+          "tableFrom": "spaces",
+          "tableTo": "users",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "spaces_name_length_check": {
+          "name": "spaces_name_length_check",
+          "value": "length(\"spaces\".\"name\") <= 200 AND length(trim(\"spaces\".\"name\")) BETWEEN 1 AND 200"
+        },
+        "spaces_description_length_check": {
+          "name": "spaces_description_length_check",
+          "value": "\"spaces\".\"description\" IS NULL OR length(\"spaces\".\"description\") <= 1000"
+        },
+        "spaces_slug_length_check": {
+          "name": "spaces_slug_length_check",
+          "value": "length(\"spaces\".\"slug\") <= 64 AND length(trim(\"spaces\".\"slug\")) BETWEEN 1 AND 64"
+        },
+        "spaces_slug_format_check": {
+          "name": "spaces_slug_format_check",
+          "value": "\n        lower(\"spaces\".\"slug\") = \"spaces\".\"slug\"\n        AND \"spaces\".\"slug\" GLOB '[a-z0-9]*'\n        AND \"spaces\".\"slug\" NOT GLOB '*[^a-z0-9-]*'\n        AND \"spaces\".\"slug\" NOT GLOB '*-'\n      "
+        },
+        "spaces_updated_after_created_check": {
+          "name": "spaces_updated_after_created_check",
+          "value": "\"spaces\".\"updated_at\" >= \"spaces\".\"created_at\""
+        },
+        "spaces_archived_after_created_check": {
+          "name": "spaces_archived_after_created_check",
+          "value": "\"spaces\".\"archived_at\" IS NULL OR \"spaces\".\"archived_at\" >= \"spaces\".\"created_at\""
+        }
+      }
+    },
+    "transcripts": {
+      "name": "transcripts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "participant_identity": {
+          "name": "participant_identity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_name": {
+          "name": "participant_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "segment_id": {
+          "name": "segment_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "language": {
+          "name": "language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "speaker_id": {
+          "name": "speaker_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "transcripts_session_id_started_at_idx": {
+          "name": "transcripts_session_id_started_at_idx",
+          "columns": [
+            "session_id",
+            "started_at"
+          ],
+          "isUnique": false
+        },
+        "transcripts_session_id_participant_idx": {
+          "name": "transcripts_session_id_participant_idx",
+          "columns": [
+            "session_id",
+            "participant_identity"
+          ],
+          "isUnique": false
+        },
+        "transcripts_session_id_participant_id_started_at_idx": {
+          "name": "transcripts_session_id_participant_id_started_at_idx",
+          "columns": [
+            "session_id",
+            "participant_id",
+            "started_at"
+          ],
+          "isUnique": false
+        },
+        "transcripts_segment_id_unique": {
+          "name": "transcripts_segment_id_unique",
+          "columns": [
+            "session_id",
+            "segment_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "transcripts_session_id_meeting_sessions_id_fk": {
+          "name": "transcripts_session_id_meeting_sessions_id_fk",
+          "tableFrom": "transcripts",
+          "tableTo": "meeting_sessions",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "transcripts_participant_id_meeting_participants_id_fk": {
+          "name": "transcripts_participant_id_meeting_participants_id_fk",
+          "tableFrom": "transcripts",
+          "tableTo": "meeting_participants",
+          "columnsFrom": [
+            "participant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "transcripts_updated_after_started_check": {
+          "name": "transcripts_updated_after_started_check",
+          "value": "\"transcripts\".\"updated_at\" >= \"transcripts\".\"started_at\""
+        }
+      }
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "normalized_email": {
+          "name": "normalized_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "plan": {
+          "name": "plan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'free'"
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'user'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        },
+        "users_normalized_email_unique": {
+          "name": "users_normalized_email_unique",
+          "columns": [
+            "normalized_email"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "users_name_length_check": {
+          "name": "users_name_length_check",
+          "value": "length(\"users\".\"name\") <= 100 AND length(trim(\"users\".\"name\")) BETWEEN 1 AND 100"
+        },
+        "users_email_length_check": {
+          "name": "users_email_length_check",
+          "value": "length(\"users\".\"email\") <= 320"
+        },
+        "users_normalized_email_length_check": {
+          "name": "users_normalized_email_length_check",
+          "value": "length(\"users\".\"normalized_email\") <= 320"
+        },
+        "users_image_length_check": {
+          "name": "users_image_length_check",
+          "value": "\"users\".\"image\" IS NULL OR length(\"users\".\"image\") <= 2048"
+        },
+        "users_updated_after_created_check": {
+          "name": "users_updated_after_created_check",
+          "value": "\"users\".\"updated_at\" >= \"users\".\"created_at\""
+        },
+        "users_plan_check": {
+          "name": "users_plan_check",
+          "value": "\"users\".\"plan\" in ('free', 'pro', 'org')"
+        },
+        "users_role_check": {
+          "name": "users_role_check",
+          "value": "\"users\".\"role\" in ('admin', 'user')"
+        }
+      }
+    },
+    "verifications": {
+      "name": "verifications",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "data": {
+          "name": "data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "verifications_type_identifier_unique": {
+          "name": "verifications_type_identifier_unique",
+          "columns": [
+            "type",
+            "identifier"
+          ],
+          "isUnique": true
+        },
+        "verifications_identifier_idx": {
+          "name": "verifications_identifier_idx",
+          "columns": [
+            "identifier"
+          ],
+          "isUnique": false
+        },
+        "verifications_expires_at_idx": {
+          "name": "verifications_expires_at_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "verifications_type_check": {
+          "name": "verifications_type_check",
+          "value": "\"verifications\".\"type\" in ('otp_signup', 'otp_login', 'otp_account_delete', 'oauth_pkce', 'passkey_register', 'passkey_auth')"
+        },
+        "verifications_data_json_check": {
+          "name": "verifications_data_json_check",
+          "value": "\"verifications\".\"data\" IS NULL OR json_valid(\"verifications\".\"data\")"
+        },
+        "verifications_data_length_check": {
+          "name": "verifications_data_length_check",
+          "value": "\"verifications\".\"data\" IS NULL OR length(\"verifications\".\"data\") <= 32768"
+        },
+        "verifications_expires_after_created_check": {
+          "name": "verifications_expires_after_created_check",
+          "value": "\"verifications\".\"expires_at\" >= \"verifications\".\"created_at\""
+        },
+        "verifications_updated_after_created_check": {
+          "name": "verifications_updated_after_created_check",
+          "value": "\"verifications\".\"updated_at\" >= \"verifications\".\"created_at\""
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

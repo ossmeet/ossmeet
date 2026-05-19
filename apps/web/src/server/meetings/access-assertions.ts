@@ -1,0 +1,85 @@
+import type { Database } from "@ossmeet/db";
+import { meetingSessions, spaceMembers } from "@ossmeet/db/schema";
+import { and, eq } from "drizzle-orm";
+import { Errors } from "@ossmeet/shared";
+import { findConnectedPresenceByUserId } from "./presence-queries";
+
+interface AssertMeetingOptions {
+  requireActive?: boolean;
+}
+
+interface AssertActiveMeetingParticipantOptions {
+  requireSpaceMembership?: boolean;
+}
+
+export async function assertMeetingExists(
+  db: Database,
+  meetingId: string,
+  { requireActive = true }: AssertMeetingOptions = {},
+) {
+  const meeting = await db.query.meetingSessions.findFirst({
+    where: requireActive
+      ? and(eq(meetingSessions.id, meetingId), eq(meetingSessions.status, "active"))
+      : eq(meetingSessions.id, meetingId),
+  });
+  if (!meeting) throw Errors.NOT_FOUND("Meeting");
+  return meeting;
+}
+
+export async function assertSpaceMembership(
+  db: Database,
+  spaceId: string,
+  userId: string,
+) {
+  const membership = await db.query.spaceMembers.findFirst({
+    where: and(eq(spaceMembers.spaceId, spaceId), eq(spaceMembers.userId, userId)),
+  });
+  if (!membership) throw Errors.FORBIDDEN();
+  return membership;
+}
+
+export async function assertSpaceMembershipIfNeeded(
+  db: Database,
+  spaceId: string | null,
+  userId: string,
+) {
+  if (!spaceId) return null;
+  return assertSpaceMembership(db, spaceId, userId);
+}
+
+export async function assertActiveMeetingParticipant(
+  db: Database,
+  meetingId: string,
+  userId: string,
+) {
+  const presence = await findConnectedPresenceByUserId(db, meetingId, userId);
+  if (!presence) throw Errors.FORBIDDEN();
+
+  return {
+    id: presence.admissionId,
+    sessionId: meetingId,
+    userId: presence.userId,
+    role: presence.role,
+    livekitIdentity: presence.livekitIdentity,
+  };
+}
+
+export async function assertActiveMeetingParticipantWithSpaceAccess(
+  db: Database,
+  meetingId: string,
+  userId: string,
+  { requireSpaceMembership = true }: AssertActiveMeetingParticipantOptions = {},
+) {
+  // Meeting must be fetched first since participant and space checks depend on it.
+  const meeting = await assertMeetingExists(db, meetingId, { requireActive: true });
+
+  // Participant check and space membership check are independent — run in parallel.
+  const [participant] = await Promise.all([
+    assertActiveMeetingParticipant(db, meeting.id, userId),
+    requireSpaceMembership
+      ? assertSpaceMembershipIfNeeded(db, meeting.spaceId, userId)
+      : null,
+  ]);
+
+  return { meeting, participant };
+}

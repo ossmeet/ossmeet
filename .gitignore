@@ -1,0 +1,79 @@
+# ── Package stores ────────────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+
+# ── Build outputs ─────────────────────────────────────────────────────────────
+dist/
+.wrangler/
+.tanstack/
+*.tsbuildinfo
+
+# ── Generated files (recreated by scripts before dev/build) ──────────────────
+apps/web/public/wasm/
+apps/web/public/wb-assets/
+apps/web/src/generated/
+packages/whiteboard/src/generated/
+
+# ── Secrets — never commit ────────────────────────────────────────────────────
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.env
+.env.*
+!.env.example
+infra/vps/secrets/
+infra/vps/livekit.yaml
+infra/vps/egress.yaml
+infra/vps/caddy/Caddyfile
+*.pem
+*.key
+credentials.json
+
+# ── Production config — contains real D1 IDs, Paddle tokens, domain routing ──
+apps/web/wrangler.jsonc
+apps/web/worker-configuration.d.ts
+
+# ── Local databases ───────────────────────────────────────────────────────────
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── Local tooling ─────────────────────────────────────────────────────────────
+.amp/
+.factory/
+.local/whiteboard-data/
+.local/assets/
+
+# ── Local dev references (never commit) ───────────────────────────────────────
+tldraw-main/
+docs/
+
+# ── Private addons — never commit ────────────────────────────────────────────
+packages/whiteboard/src/addons.mjs
+packages/whiteboard/src/overrides/
+apps/web/public/_runtime/krisp/
+
+# ── AI coding instructions (personal, not public) ────────────────────────────
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.claude/
+.github/copilot-instructions.md
+
+# ── Root-level scratch files ──────────────────────────────────────────────────
+/*.txt
+REPORTS/
+caddy_data
+patches/

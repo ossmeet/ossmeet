@@ -1,0 +1,26 @@
+{
+  "name": "ossmeet",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "pnpm --filter @ossmeet/web run setup:runtime",
+    "dev": "pnpm --filter @ossmeet/web dev",
+    "dev:whiteboard": "pnpm --filter @ossmeet/whiteboard start",
+    "build": "pnpm --filter @ossmeet/web build",
+    "hygiene": "node scripts/hygiene-report.mjs",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "db:generate": "pnpm --filter @ossmeet/db db:generate",
+    "db:push:dev": "pnpm --filter @ossmeet/db db:push:dev",
+    "db:migrate:local": "pnpm --filter @ossmeet/web db:migrate:local",
+    "db:migrate:remote": "pnpm --filter @ossmeet/web db:migrate:remote",
+    "deploy": "pnpm --filter @ossmeet/web run deploy",
+    "infra:provision": "bash infra/vps/provision.sh"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6",
+    "wrangler": "^4.91.0"
+  }
+}

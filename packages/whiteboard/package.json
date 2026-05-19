@@ -1,0 +1,59 @@
+{
+  "name": "@ossmeet/whiteboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@tanstack/react-router": "^1.169.2",
+    "@tanstack/react-start": "^1.167.65",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-router": {
+      "optional": true
+    },
+    "@tanstack/react-start": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tanstack/react-router": "^1.169.2",
+    "@tanstack/react-start": "^1.167.65",
+    "@types/bun": "latest",
+    "@types/react": "^19.2.14",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.13"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.7.6",
+    "@ossmeet/db": "workspace:*",
+    "@ossmeet/shared": "workspace:*",
+    "@tanstack/ai": "^0.17.0",
+    "@tiptap/core": "^3.23.4",
+    "@tiptap/pm": "^3.23.4",
+    "@tldraw/state": "5.0.1",
+    "@tldraw/sync": "5.0.1",
+    "@tldraw/sync-core": "5.0.1",
+    "@tldraw/tlschema": "5.0.1",
+    "@tldraw/validate": "5.0.1",
+    "aws4fetch": "^1.0.20",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.2",
+    "katex": "^0.16.46",
+    "livekit-client": "^2.19.0",
+    "lucide-react": "^1.16.0",
+    "pdf-lib": "^1.17.1",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "tailwind-merge": "^3.6.0",
+    "tldraw": "5.0.1",
+    "zod": "^4.4.3"
+  },
+  "optionalDependencies": {
+    "@livekit/krisp-noise-filter": "^0.4.3"
+  }
+}

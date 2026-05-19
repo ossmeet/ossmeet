@@ -1,0 +1,17 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Build scripts that are explicitly allowed to run at install time.
+# Everything else is blocked by default for supply-chain safety.
+# (pnpm 11 replaced `onlyBuiltDependencies` with this map.)
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+
+# Pinned overrides shared across the workspace.
+overrides:
+  h3: 2.0.1-rc.18
+  h3-v2: npm:h3@2.0.1-rc.18
+  lodash-es: 4.18.1
